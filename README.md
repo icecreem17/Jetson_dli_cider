@@ -27,5 +27,11 @@ day 2 :
 ```
 https://github.com/user-attachments/assets/753b3ac5-ee2d-4176-bb74-15c2a446380b
 
+```
+3. 엔비디아 사진 다운로드
+```
+![Screenshot from 2024-11-14 21-45-16](https://github.com/user-attachments/assets/950ff074-5eb5-486b-b481-387118ec2d9f)
+![Screenshot from 2024-11-14 21-45-32](https://github.com/user-attachments/assets/60e8b810-42c9-4dd8-8294-44478b930d15)
+
 
 
