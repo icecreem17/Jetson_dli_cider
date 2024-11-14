@@ -13,11 +13,11 @@ day 1 :
 
 ```
 day 2 :
-잭슨 나노 영상 캡쳐 이미지
+1. 잭슨 나노 영상 캡쳐 이미지
 ```
 ![image](https://github.com/user-attachments/assets/4f6050d6-6fe3-41dd-886a-4f8b2a7a6888)
 ```
-잭슨 나노 영상 캡쳐 동영상
+2. 잭슨 나노 영상 캡쳐 동영상
 ```
 https://github.com/user-attachments/assets/753b3ac5-ee2d-4176-bb74-15c2a446380b
 
