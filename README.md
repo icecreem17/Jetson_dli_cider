@@ -14,3 +14,5 @@
 잭슨 나노 영상 캡쳐
 '''
 ![image](https://github.com/user-attachments/assets/4f6050d6-6fe3-41dd-886a-4f8b2a7a6888)
+Uploading nvcamtest_11218_s00_00001.mp4…
+
