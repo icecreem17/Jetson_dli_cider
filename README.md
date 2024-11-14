@@ -20,6 +20,8 @@ day 2 :
 1. 잭슨 나노 영상 캡쳐 이미지
 ```
 ![image](https://github.com/user-attachments/assets/4f6050d6-6fe3-41dd-886a-4f8b2a7a6888)
+![Screenshot from 2024-11-14 20-59-17](https://github.com/user-attachments/assets/1ddb0609-342e-42b7-8a71-1262b339d05b)
+
 ```
 2. 잭슨 나노 영상 캡쳐 동영상
 ```
