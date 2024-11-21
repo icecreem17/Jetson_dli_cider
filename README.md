@@ -45,6 +45,7 @@ day 3 :
  -> reboot 중 GUI 모드로 설정하는 과정
 
 ![Screenshot from 2024-11-21 20-20-05](https://github.com/user-attachments/assets/9793be0a-ea05-4966-9041-73e2d057b8b4)
+
  -> 메모리가 1.9기가 에서 18기가로 늘어난 것을 볼 수 있음
 
 ```
