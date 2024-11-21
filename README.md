@@ -42,10 +42,10 @@ day 3 :
 2. 스왑 18기가 생성
 ```
 ![스왑 사진  jpg](https://github.com/user-attachments/assets/a7e28215-6e86-488c-8f4b-01feaf3d4039)
--> reboot 중 GUI 모드로 설정하는 과정
+# -> reboot 중 GUI 모드로 설정하는 과정
 
 ![Screenshot from 2024-11-21 20-20-05](https://github.com/user-attachments/assets/9793be0a-ea05-4966-9041-73e2d057b8b4)
--> 메모리가 1.9기가 에서 18기가로 늘어난 것을 볼 수 있음
+# -> 메모리가 1.9기가 에서 18기가로 늘어난 것을 볼 수 있음
 
 ```
 3. 주피터 노트북 접속
