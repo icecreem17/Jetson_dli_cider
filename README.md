@@ -34,7 +34,7 @@ https://github.com/user-attachments/assets/753b3ac5-ee2d-4176-bb74-15c2a446380b
 ![Screenshot from 2024-11-14 21-45-32](https://github.com/user-attachments/assets/60e8b810-42c9-4dd8-8294-44478b930d15)
 ```
 day 3 :
-1. 엔비디아 사진 다운로드 완료
+1. 엔비디아 사진 다운로드 완료 & 주피터 노트북 url생성
 ```
 ![Screenshot from 2024-11-21 18-54-55](https://github.com/user-attachments/assets/9586b14b-d830-40a7-b480-eaff1186b8e7)
 
@@ -42,7 +42,10 @@ day 3 :
 2. 스왑 18기가 생성
 ```
 ![스왑 사진  jpg](https://github.com/user-attachments/assets/a7e28215-6e86-488c-8f4b-01feaf3d4039)
+-> reboot 중 GUI 모드로 설정하는 과정
+
 ![Screenshot from 2024-11-21 20-20-05](https://github.com/user-attachments/assets/9793be0a-ea05-4966-9041-73e2d057b8b4)
+-> 메모리가 1.9기가 에서 18기가로 늘어난 것을 볼 수 있음
 
 ```
 3. 주피터 노트북 접속
