@@ -2,18 +2,83 @@
 
 잭슨 나노 일대기
 ===============
-Traceback (most recent call last):
-  File "co2_data_logger.py", line 20, in <module>
-    df.to_excel("co2_data.xlsx", index=False)
-  File "/usr/lib/python3/dist-packages/pandas/core/frame.py", line 1545, in to_excel
-    engine=engine)
-  File "/usr/lib/python3/dist-packages/pandas/io/formats/excel.py", line 643, in write
-    writer = ExcelWriter(_stringify_path(writer), engine=engine)
-  File "/usr/lib/python3/dist-packages/pandas/io/excel.py", line 837, in __init__
-    if not openpyxl_compat.is_compat(major_ver=self.openpyxl_majorver):
-  File "/usr/lib/python3/dist-packages/pandas/compat/openpyxl_compat.py", line 27, in is_compat
-    import openpyxl
-ModuleNotFoundError: No module named 'openpyxl'
+import serial
+import pandas as pd
+import time
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+
+# 시리얼 포트 설정 (Jetson Nano의 UART 포트 사용)
+ser = serial.Serial('/dev/ttyUSB0', 9600)  # 포트를 Arduino와 연결된 것으로 변경
+data_list = []
+
+# 이메일 전송 함수
+def send_email(file_path):
+    # 이메일 설정
+    sender_email = "your_email@gmail.com"
+    receiver_email = "recipient_email@gmail.com"
+    password = "your_app_password"
+
+    # 이메일 메시지 생성
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = "CO2 Sensor Data"
+
+    # 파일 첨부
+    attachment = MIMEBase('application', 'octet-stream')
+    with open(file_path, "rb") as file:
+        attachment.set_payload(file.read())
+    encoders.encode_base64(attachment)
+    attachment.add_header('Content-Disposition', f'attachment; filename={file_path}')
+    msg.attach(attachment)
+
+    # 이메일 전송
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, msg.as_string())
+
+    print(f"Email sent to {receiver_email} with {file_path} attached.")
+
+# 데이터 수집 및 저장
+def collect_and_save_data():
+    start_time = time.time()  # 시작 시간 기록
+    formatted_start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))
+
+    try:
+        while time.time() - start_time < 30 * 60:  # 30분 동안 실행
+            if ser.in_waiting > 0:
+                data = ser.readline().decode('utf-8').strip()
+                timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                data_list.append({"Timestamp": timestamp, "CO2_Level": data})
+                print(f"Received: {data}")
+        
+        # 수집 종료 후 데이터 저장
+        formatted_end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        # 시작 시간과 종료 시간 추가
+        data_list.append({"Timestamp": "Start Time", "CO2_Level": formatted_start_time})
+        data_list.append({"Timestamp": "End Time", "CO2_Level": formatted_end_time})
+        
+        # 데이터프레임 생성 및 엑셀 저장
+        df = pd.DataFrame(data_list)
+        file_path = "co2_data.xlsx"
+        df.to_excel(file_path, index=False)
+        print(f"Excel file saved as '{file_path}'")
+        
+        # 이메일로 엑셀 파일 전송
+        send_email(file_path)
+
+    except KeyboardInterrupt:
+        print("Data collection stopped by user.")
+
+    finally:
+        ser.close()
+
+# 프로그램 실행
+if __name__ == "__main__":
+    collect_and_save_data()
 
 
 ```
