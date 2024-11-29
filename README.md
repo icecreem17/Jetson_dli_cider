@@ -2,6 +2,41 @@
 
 잭슨 나노 일대기
 ===============
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+
+def send_email(file_path):
+    # 이메일 설정
+    sender_email = "your_email@gmail.com"
+    receiver_email = "recipient_email@gmail.com"
+    password = "your_app_password"
+
+    # 이메일 메시지 생성
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = "CO2 Sensor Data"
+
+    # 파일 첨부
+    attachment = MIMEBase('application', 'octet-stream')
+    with open(file_path, "rb") as file:
+        attachment.set_payload(file.read())
+    encoders.encode_base64(attachment)
+    attachment.add_header('Content-Disposition', f'attachment; filename={file_path}')
+    msg.attach(attachment)
+
+    # 이메일 전송
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, msg.as_string())
+
+    print(f"Email sent to {receiver_email} with {file_path} attached.")
+
+# 엑셀 파일을 이메일로 전송
+send_email("co2_data.xlsx")
+
 
 ```
 day 1 : 
