@@ -65,5 +65,79 @@ day 3 :
 ![Screenshot from 2024-11-21 20-24-24](https://github.com/user-attachments/assets/39db115d-eaa8-46e2-bc2b-9e46daa147e7)
 
 
+#include <WiFi.h> // ESP32용
+#include <ESP_Mail_Client.h>
+
+// Wi-Fi 정보
+const char* ssid = "Your_SSID";
+const char* password = "Your_PASSWORD";
+
+// 이메일 정보
+#define SMTP_HOST "smtp.gmail.com"
+#define SMTP_PORT 465
+#define EMAIL_SENDER "your_email@gmail.com"
+#define EMAIL_PASSWORD "your_email_password"
+#define EMAIL_RECIPIENT "recipient_email@gmail.com"
+
+// CM1106 센서 핀
+#define RX_PIN 16
+#define TX_PIN 17
+
+// 초기화
+WiFiClientSecure client;
+SMTPSession smtp;
+
+void setup() {
+  Serial.begin(9600);  // 디버깅용 시리얼 모니터
+  Serial2.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);  // CM1106 통신
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("WiFi 연결 중...");
+  }
+  Serial.println("WiFi 연결 완료!");
+}
+
+void loop() {
+  if (Serial2.available()) {
+    String co2Data = readCO2(); // 센서 데이터 읽기 함수 호출
+    sendEmail(co2Data);        // 이메일 전송
+    delay(60000);              // 1분 간격으로 데이터 전송
+  }
+}
+
+String readCO2() {
+  uint8_t request[] = {0x11, 0x01, 0x01, 0xED}; // CM1106 요청 명령
+  Serial2.write(request, sizeof(request));
+  delay(500);
+
+  uint8_t response[9];
+  if (Serial2.readBytes(response, 9) == 9) {
+    int co2 = (response[4] << 8) | response[5];
+    return String(co2) + " ppm";
+  }
+  return "Error reading CO2";
+}
+
+void sendEmail(String co2Data) {
+  smtp.debug(1);
+  smtp.callback(NULL);
+
+  SMTP_Message message;
+  message.sender.name = "Arduino CO2 Sensor";
+  message.sender.email = EMAIL_SENDER;
+  message.subject = "CO2 Sensor Data";
+  message.addRecipient("Recipient", EMAIL_RECIPIENT);
+  message.text.content = "CO2 Concentration: " + co2Data;
+
+  smtp.connect(SMTP_HOST, SMTP_PORT);
+  if (!MailClient.sendMail(&smtp, &message)) {
+    Serial.println("Error sending Email, " + smtp.errorReason());
+  }
+}
+
+
+
 
 
