@@ -3,22 +3,18 @@
 잭슨 나노 일대기
 ===============
 
- Traceback (most recent call last):
-  File "co2_data_logger.py", line 77, in <module>
-    collect_and_save_data()
-  File "co2_data_logger.py", line 67, in collect_and_save_data
-    send_email(file_path)
-  File "co2_data_logger.py", line 36, in send_email
-    server.login(sender_email, password)
-  File "/usr/lib/python3.6/smtplib.py", line 730, in login
-    raise last_exception
-  File "/usr/lib/python3.6/smtplib.py", line 721, in login
-    initial_response_ok=initial_response_ok)
-  File "/usr/lib/python3.6/smtplib.py", line 642, in auth
-    raise SMTPAuthenticationError(code, resp)
-smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials d9443c01a7336-21521988e00sm23764375ad.212 - gsmtp')   
+[Unit]
+Description=CO2 Sensor Script
+After=network.target
 
-```
+[Service]
+ExecStart=/usr/bin/python3 /path/to/your_script.py
+Restart=always
+User=your_username
+
+[Install]
+WantedBy=multi-user.target
+
 day 1 : 
 잭슨 나노 한글 설치까지
 ```
