@@ -133,6 +133,15 @@ void loop() {
 
 
 
-http://arduino.esp8266.com/stable/package_esp8266com_index.json
+
+void setup() {
+  Serial.begin(9600); // 시리얼 통신 시작
+}
+
+void loop() {
+  int co2Level = analogRead(A0); // 이산화탄소 센서 값 읽기
+  Serial.println(co2Level); // Jetson Nano로 데이터 전송
+  delay(1000); // 1초 대기
+}
 
 
