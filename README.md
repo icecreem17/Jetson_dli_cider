@@ -2,40 +2,21 @@
 
 잭슨 나노 일대기
 ===============
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
+Traceback (most recent call last):
+  File "/home/dli/.local/lib/python3.6/site-packages/serial/serialposix.py", line 322, in open
+    self.fd = os.open(self.portstr, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+PermissionError: [Errno 13] Permission denied: '/dev/ttyTHS1'
 
-def send_email(file_path):
-    # 이메일 설정
-    sender_email = "your_email@gmail.com"
-    receiver_email = "recipient_email@gmail.com"
-    password = "your_app_password"
+During handling of the above exception, another exception occurred:
 
-    # 이메일 메시지 생성
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
-    msg['Subject'] = "CO2 Sensor Data"
-
-    # 파일 첨부
-    attachment = MIMEBase('application', 'octet-stream')
-    with open(file_path, "rb") as file:
-        attachment.set_payload(file.read())
-    encoders.encode_base64(attachment)
-    attachment.add_header('Content-Disposition', f'attachment; filename={file_path}')
-    msg.attach(attachment)
-
-    # 이메일 전송
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, msg.as_string())
-
-    print(f"Email sent to {receiver_email} with {file_path} attached.")
-
-# 엑셀 파일을 이메일로 전송
-send_email("co2_data.xlsx")
+Traceback (most recent call last):
+  File "co2_data_logger.py", line 6, in <module>
+    ser = serial.Serial('/dev/ttyTHS1', 9600)  # 포트를 Arduino와 연결된 것으로 변경
+  File "/home/dli/.local/lib/python3.6/site-packages/serial/serialutil.py", line 244, in __init__
+    self.open()
+  File "/home/dli/.local/lib/python3.6/site-packages/serial/serialposix.py", line 325, in open
+    raise SerialException(msg.errno, "could not open port {}: {}".format(self._port, msg))
+serial.serialutil.SerialException: [Errno 13] could not open port /dev/ttyTHS1: [Errno 13] Permission denied: '/dev/ttyTHS1'
 
 
 
