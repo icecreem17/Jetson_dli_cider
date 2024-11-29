@@ -2,30 +2,41 @@
 
 잭슨 나노 일대기
 ===============
-import serial
-import pandas as pd
-import time
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 
-# 시리얼 포트 설정 (Jetson Nano의 UART 포트 사용)
-ser = serial.Serial('/dev/ttyTHS1', 9600)  # 포트를 Arduino와 연결된 것으로 변경
-data_list = []
+def send_email(file_path):
+    # 이메일 설정
+    sender_email = "your_email@gmail.com"
+    receiver_email = "recipient_email@gmail.com"
+    password = "your_app_password"
 
-try:
-    while True:
-        if ser.in_waiting > 0:
-            data = ser.readline().decode('utf-8').strip()
-            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-            data_list.append({"Timestamp": timestamp, "CO2_Level": data})
-            print(f"Received: {data}")
-        
-        # 10개의 데이터가 수집되면 엑셀 파일로 저장
-        if len(data_list) >= 10:
-            df = pd.DataFrame(data_list)
-            df.to_excel("co2_data.xlsx", index=False)
-            print("Excel file saved as 'co2_data.xlsx'")
-            data_list = []  # 데이터 초기화
-except KeyboardInterrupt:
-    print("Stopped by User")
+    # 이메일 메시지 생성
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = "CO2 Sensor Data"
+
+    # 파일 첨부
+    attachment = MIMEBase('application', 'octet-stream')
+    with open(file_path, "rb") as file:
+        attachment.set_payload(file.read())
+    encoders.encode_base64(attachment)
+    attachment.add_header('Content-Disposition', f'attachment; filename={file_path}')
+    msg.attach(attachment)
+
+    # 이메일 전송
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, msg.as_string())
+
+    print(f"Email sent to {receiver_email} with {file_path} attached.")
+
+# 엑셀 파일을 이메일로 전송
+send_email("co2_data.xlsx")
+
 
 
 ```
