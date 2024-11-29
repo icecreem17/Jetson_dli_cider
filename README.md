@@ -65,55 +65,71 @@ day 3 :
 ![Screenshot from 2024-11-21 20-24-24](https://github.com/user-attachments/assets/39db115d-eaa8-46e2-bc2b-9e46daa147e7)
 
 #include <WiFi.h>
-#include <ESP_Mail_Client.h>
+#include <ESP_Mail_Client.h> // ESP-Mail-Client 라이브러리
 
-// WiFi 정보
-const char* ssid = "your_wifi_ssid";
-const char* password = "your_wifi_password";
+// WiFi 네트워크 정보
+const char* ssid = "your_wifi_ssid";         // WiFi 이름
+const char* password = "your_wifi_password"; // WiFi 비밀번호
 
 // SMTP 서버 정보
-#define SMTP_HOST "smtp.gmail.com"
-#define SMTP_PORT 587
-#define AUTHOR_EMAIL "your_email@gmail.com"
-#define AUTHOR_PASSWORD "your_password"
+#define SMTP_HOST "smtp.gmail.com" // Gmail SMTP 서버
+#define SMTP_PORT 587              // STARTTLS 포트 번호
+
+// 이메일 계정 정보
+#define AUTHOR_EMAIL "your_email@gmail.com"   // 발신자 이메일
+#define AUTHOR_PASSWORD "your_password"       // 발신자 비밀번호 (또는 앱 비밀번호)
+
+// 수신자 이메일 주소
+#define RECIPIENT_EMAIL "recipient_email@gmail.com"
+
+// SMTP 세션 및 메시지
+SMTPSession smtp;
+SMTP_Message message;
 
 void setup() {
   Serial.begin(115200);
 
   // WiFi 연결
+  Serial.print("Connecting to WiFi");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println("\nWiFi connected!");
+  Serial.println("IP address: " + WiFi.localIP().toString());
 
   // SMTP 세션 설정
-  SMTPSession smtp;
   ESP_Mail_Session session;
   session.server.host_name = SMTP_HOST;
   session.server.port = SMTP_PORT;
   session.login.email = AUTHOR_EMAIL;
   session.login.password = AUTHOR_PASSWORD;
+  session.login.user_domain = ""; // 필요시 도메인 설정
 
-  // 메시지 작성
-  SMTP_Message message;
-  message.sender.name = "ESP32";
-  message.sender.email = AUTHOR_EMAIL;
-  message.subject = "SMTP Test";
-  message.addRecipient("Recipient Name", "recipient_email@example.com");
-  message.text.content = "Hello, this is a test email from ESP32!";
-  
+  // 이메일 메시지 구성
+  message.sender.name = "ESP32 Test Device"; // 발신자 이름
+  message.sender.email = AUTHOR_EMAIL;      // 발신자 이메일
+  message.subject = "Hello from ESP32!";    // 이메일 제목
+  message.addRecipient("Recipient", RECIPIENT_EMAIL); // 수신자
+  message.text.content = "This is a test email sent from ESP32."; // 본문
+  message.text.charSet = "utf-8"; // 문자 인코딩 설정
+
   // 이메일 전송
   if (!MailClient.sendMail(&smtp, &session, &message)) {
-    Serial.println("Email sending failed!");
-    Serial.println(smtp.errorReason());
+    Serial.println("Failed to send email");
+    Serial.println("Error: " + smtp.errorReason());
   } else {
     Serial.println("Email sent successfully!");
   }
+
+  // 연결 종료
+  smtp.closeSession();
 }
 
-void loop() {}
+void loop() {
+  // 메인 루프는 비워 둡니다 (필요 시 다른 작업 추가 가능)
+}
 
 
 
