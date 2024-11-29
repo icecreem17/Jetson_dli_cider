@@ -2,21 +2,34 @@
 
 잭슨 나노 일대기
 ===============
-Traceback (most recent call last):
-  File "tem_data_logger.py", line 90, in <module>
-    collect_and_save_data()
-  File "tem_data_logger.py", line 80, in collect_and_save_data
-    send_email(file_path)
-  File "tem_data_logger.py", line 36, in send_email
-    server.login(sender_email, password)
-  File "/usr/lib/python3.6/smtplib.py", line 730, in login
-    raise last_exception
-  File "/usr/lib/python3.6/smtplib.py", line 721, in login
-    initial_response_ok=initial_response_ok)
-  File "/usr/lib/python3.6/smtplib.py", line 642, in auth
-    raise SMTPAuthenticationError(code, resp)
-smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials d2e1a72fcca58-72541849c1csm2888492b3a.200 - gsmtp')
+#include "DHT.h"
 
+#define DHTPIN 2     // DHT22 센서가 연결된 핀
+#define DHTTYPE DHT22
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(9600); // 시리얼 통신 시작
+  dht.begin();
+}
+
+void loop() {
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+
+  // 간단한 쉼표 구분 데이터로 전송
+  Serial.print(temperature);
+  Serial.print(",");
+  Serial.println(humidity);
+
+  delay(2000); // 2초 대기
+}
 
 day 1 : 
 잭슨 나노 한글 설치까지
