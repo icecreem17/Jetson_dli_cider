@@ -5,18 +5,19 @@
 Traceback (most recent call last):
   File "/home/dli/.local/lib/python3.6/site-packages/serial/serialposix.py", line 322, in open
     self.fd = os.open(self.portstr, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
-PermissionError: [Errno 13] Permission denied: '/dev/ttyTHS1'
+OSError: [Errno 16] Device or resource busy: '/dev/ttyUSB0'
 
 During handling of the above exception, another exception occurred:
 
 Traceback (most recent call last):
   File "co2_data_logger.py", line 6, in <module>
-    ser = serial.Serial('/dev/ttyTHS1', 9600)  # 포트를 Arduino와 연결된 것으로 변경
+    ser = serial.Serial('/dev/ttyUSB0', 9600)  # 포트를 Arduino와 연결된 것으로 변경
   File "/home/dli/.local/lib/python3.6/site-packages/serial/serialutil.py", line 244, in __init__
     self.open()
   File "/home/dli/.local/lib/python3.6/site-packages/serial/serialposix.py", line 325, in open
     raise SerialException(msg.errno, "could not open port {}: {}".format(self._port, msg))
-serial.serialutil.SerialException: [Errno 13] could not open port /dev/ttyTHS1: [Errno 13] Permission denied: '/dev/ttyTHS1'
+serial.serialutil.SerialException: [Errno 16] could not open port /dev/ttyUSB0: [Errno 16] Device or resource busy: '/dev/ttyUSB0'
+
 
 
 
