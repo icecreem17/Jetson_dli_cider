@@ -131,21 +131,8 @@ void loop() {
   // 메인 루프는 비워 둡니다 (필요 시 다른 작업 추가 가능)
 }
 
-Arduino: 1.8.19 (Linux), Board: "Arduino Uno"
-
-In file included from /home/dli/Arduino/sketch_nov29a/sketch_nov29a.ino:50:0:
-/home/dli/Arduino/libraries/ESP_Mail_Client/src/ESP_Mail_Client.h:39:10: fatal error: algorithm: No such file or directory
- #include <algorithm>
-          ^~~~~~~~~~~
-compilation terminated.
-exit status 1
-Error compiling for board Arduino Uno.
 
 
-This report would have more information with
-"Show verbose output during compilation"
-option enabled in File -> Preferences.
-
-
+http://arduino.esp8266.com/stable/package_esp8266com_index.json
 
 
