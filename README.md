@@ -3,22 +3,17 @@
 잭슨 나노 일대기
 ===============
 Traceback (most recent call last):
-  File "/home/dli/.local/lib/python3.6/site-packages/serial/serialposix.py", line 322, in open
-    self.fd = os.open(self.portstr, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
-OSError: [Errno 16] Device or resource busy: '/dev/ttyUSB0'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "co2_data_logger.py", line 6, in <module>
-    ser = serial.Serial('/dev/ttyUSB0', 9600)  # 포트를 Arduino와 연결된 것으로 변경
-  File "/home/dli/.local/lib/python3.6/site-packages/serial/serialutil.py", line 244, in __init__
-    self.open()
-  File "/home/dli/.local/lib/python3.6/site-packages/serial/serialposix.py", line 325, in open
-    raise SerialException(msg.errno, "could not open port {}: {}".format(self._port, msg))
-serial.serialutil.SerialException: [Errno 16] could not open port /dev/ttyUSB0: [Errno 16] Device or resource busy: '/dev/ttyUSB0'
-
-
+  File "co2_data_logger.py", line 20, in <module>
+    df.to_excel("co2_data.xlsx", index=False)
+  File "/usr/lib/python3/dist-packages/pandas/core/frame.py", line 1545, in to_excel
+    engine=engine)
+  File "/usr/lib/python3/dist-packages/pandas/io/formats/excel.py", line 643, in write
+    writer = ExcelWriter(_stringify_path(writer), engine=engine)
+  File "/usr/lib/python3/dist-packages/pandas/io/excel.py", line 837, in __init__
+    if not openpyxl_compat.is_compat(major_ver=self.openpyxl_majorver):
+  File "/usr/lib/python3/dist-packages/pandas/compat/openpyxl_compat.py", line 27, in is_compat
+    import openpyxl
+ModuleNotFoundError: No module named 'openpyxl'
 
 
 ```
