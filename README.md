@@ -2,16 +2,36 @@
 
 잭슨 나노 일대기
 ===============
+#include "DHT.h"
 
-Traceback (most recent call last):
-  File "co2_data_logger.py", line 77, in <module>
-    collect_and_save_data()
-  File "co2_data_logger.py", line 49, in collect_and_save_data
-    data = ser.readline().decode('utf-8').strip()
-  File "/home/dli/.local/lib/python3.6/site-packages/serial/serialposix.py", line 596, in read
-    'device reports readiness to read but returned no data '
-serial.serialutil.SerialException: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
+#define DHTPIN 2     // DHT22 센서가 연결된 핀
+#define DHTTYPE DHT22
 
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(9600); // 시리얼 통신 시작
+  dht.begin();
+}
+
+void loop() {
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+
+  // 온도와 습도를 Jetson Nano로 전송
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.print(" C, Humidity: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+
+  delay(2000); // 2초 대기
+}
 
 day 1 : 
 잭슨 나노 한글 설치까지
