@@ -3,17 +3,15 @@
 잭슨 나노 일대기
 ===============
 
-[Unit]
-Description=CO2 Sensor Script
-After=network.target
+Traceback (most recent call last):
+  File "co2_data_logger.py", line 77, in <module>
+    collect_and_save_data()
+  File "co2_data_logger.py", line 49, in collect_and_save_data
+    data = ser.readline().decode('utf-8').strip()
+  File "/home/dli/.local/lib/python3.6/site-packages/serial/serialposix.py", line 596, in read
+    'device reports readiness to read but returned no data '
+serial.serialutil.SerialException: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
 
-[Service]
-ExecStart=/usr/bin/python3 /path/to/your_script.py
-Restart=always
-User=your_username
-
-[Install]
-WantedBy=multi-user.target
 
 day 1 : 
 잭슨 나노 한글 설치까지
