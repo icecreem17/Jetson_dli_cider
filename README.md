@@ -13,6 +13,10 @@ WantedBy=multi-user.target
 
 
 
+python3 /home/dli/save1_data.py
+python3: can't open file '/home/dli/save1_data.py': [Errno 2] No such file or directory
+
+
 
 
 잭슨 나노 일대기
