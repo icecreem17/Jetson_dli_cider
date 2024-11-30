@@ -2,35 +2,85 @@
 
 잭슨 나노 일대기
 ===============
-#include "DHT.h"
+import serial
+import pandas as pd
+import time
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 
-#define DHTPIN 2     // DHT22 센서가 연결된 핀
-#define DHTTYPE DHT22
+# 시리얼 포트 설정 (Jetson Nano의 UART 포트 사용)
+ser = serial.Serial('/dev/ttyUSB0', 9600)  # Arduino가 연결된 포트를 설정
+data_list = []
 
-DHT dht(DHTPIN, DHTTYPE);
+# 이메일 전송 함수
+def send_email(file_path):
+    sender_email = "your_email@gmail.com"
+    receiver_email = "recipient_email@gmail.com"
+    password = "your_app_password"
 
-void setup() {
-  Serial.begin(9600); // 시리얼 통신 시작
-  dht.begin();
-}
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = "DHT22 Sensor Data"
 
-void loop() {
-  float temperature = dht.readTemperature();
-  float humidity = dht.readHumidity();
+    attachment = MIMEBase('application', 'octet-stream')
+    with open(file_path, "rb") as file:
+        attachment.set_payload(file.read())
+    encoders.encode_base64(attachment)
+    attachment.add_header('Content-Disposition', f'attachment; filename={file_path}')
+    msg.attach(attachment)
 
-  if (isnan(temperature) || isnan(humidity)) {
-    Serial.println("Failed to read from DHT sensor!");
-    return;
-  }
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, msg.as_string())
 
-  // 간단한 쉼표 구분 데이터로 전송
-  Serial.print(temperature);
-  Serial.print(",");
-  Serial.println(humidity);
+    print(f"Email sent to {receiver_email} with {file_path} attached.")
 
-  delay(2000); // 2초 대기
-}
+# 데이터 수집 및 저장
+def collect_and_save_data(duration=30):
+    start_time = time.time()
+    formatted_start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))
 
+    try:
+        while time.time() - start_time < duration * 60:  # 정해진 시간 (분) 동안 실행
+            if ser.in_waiting > 0:
+                raw_data = ser.readline().decode('utf-8').strip()
+                try:
+                    temperature, humidity = raw_data.split(",")
+                    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                    data_list.append({
+                        "Timestamp": timestamp,
+                        "Temperature": temperature,
+                        "Humidity": humidity
+                    })
+                    print(f"Received: Temperature={temperature}, Humidity={humidity}")
+                except ValueError:
+                    print(f"Invalid data format: {raw_data}")
+                    continue
+
+        formatted_end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        data_list.append({"Timestamp": "Start Time", "Temperature": "-", "Humidity": formatted_start_time})
+        data_list.append({"Timestamp": "End Time", "Temperature": "-", "Humidity": formatted_end_time})
+
+        df = pd.DataFrame(data_list)
+        file_path = "dht22_data.xlsx"
+        df.to_excel(file_path, index=False)
+        print(f"Excel file saved as '{file_path}'")
+
+        return file_path
+
+    except KeyboardInterrupt:
+        print("Data collection stopped by user.")
+
+    finally:
+        ser.close()
+
+# 프로그램 실행
+if __name__ == "__main__":
+    excel_file = collect_and_save_data(duration=1)  # 30분 동안 데이터 수집
+    send_email(excel_file)  # 수집된 데이터를 이메일로 전송
 day 1 : 
 잭슨 나노 한글 설치까지
 ```
