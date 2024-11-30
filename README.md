@@ -1,4 +1,10 @@
 # jetson_dli_cider
+
+dli@dli:~$ ls /home/dli/save1_data.xlsx
+ls: cannot access '/home/dli/save1_data.xlsx': No such file or directory
+
+
+
 [Unit]
 Description=save1 Data collector service
 After=multi-user.target
