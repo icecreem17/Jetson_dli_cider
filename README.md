@@ -11,7 +11,9 @@ from email.mime.base import MIMEBase
 from email import encoders
 
 # 시리얼 포트 설정 (Jetson Nano의 UART 포트 사용)
-ser = serial.Serial('/dev/ttyUSB0', 9600)  # Arduino가 연결된 포트를 설정
+dht22_port = serial.Serial('/dev/ttyUSB0', 9600)  # DHT22 센서 포트
+cm1106_port = serial.Serial('/dev/ttyUSB1', 9600)  # CM1106 센서 포트
+
 data_list = []
 
 # 이메일 전송 함수
@@ -23,7 +25,7 @@ def send_email(file_path):
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = receiver_email
-    msg['Subject'] = "DHT22 Sensor Data"
+    msg['Subject'] = "Sensor Data (Temperature, Humidity, CO2)"
 
     attachment = MIMEBase('application', 'octet-stream')
     with open(file_path, "rb") as file:
@@ -44,28 +46,48 @@ def collect_and_save_data(duration=30):
     formatted_start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))
 
     try:
-        while time.time() - start_time < duration * 60:  # 정해진 시간 (분) 동안 실행
-            if ser.in_waiting > 0:
-                raw_data = ser.readline().decode('utf-8').strip()
+        while time.time() - start_time < duration * 60:  # 정해진 시간(30분) 동안 실행
+            # DHT22 센서 데이터 읽기
+            if dht22_port.in_waiting > 0:
+                dht22_raw = dht22_port.readline().decode('utf-8').strip()
                 try:
-                    temperature, humidity = raw_data.split(",")
-                    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-                    data_list.append({
-                        "Timestamp": timestamp,
-                        "Temperature": temperature,
-                        "Humidity": humidity
-                    })
-                    print(f"Received: Temperature={temperature}, Humidity={humidity}")
+                    temperature, humidity = dht22_raw.split(",")
                 except ValueError:
-                    print(f"Invalid data format: {raw_data}")
-                    continue
+                    print(f"Invalid DHT22 data format: {dht22_raw}")
+                    temperature, humidity = None, None
+            else:
+                temperature, humidity = None, None
 
+            # CM1106 센서 데이터 읽기
+            if cm1106_port.in_waiting > 0:
+                cm1106_raw = cm1106_port.readline().decode('utf-8').strip()
+                try:
+                    co2 = cm1106_raw  # CM1106 데이터는 단일 값으로 전송
+                except ValueError:
+                    print(f"Invalid CM1106 data format: {cm1106_raw}")
+                    co2 = None
+            else:
+                co2 = None
+
+            # 데이터 추가
+            if temperature and humidity and co2:
+                timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                data_list.append({
+                    "Timestamp": timestamp,
+                    "Temperature": temperature,
+                    "Humidity": humidity,
+                    "CO2_Level": co2
+                })
+                print(f"Received: Temperature={temperature}, Humidity={humidity}, CO2={co2}")
+
+        # 시작 시간과 종료 시간 추가
         formatted_end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-        data_list.append({"Timestamp": "Start Time", "Temperature": "-", "Humidity": formatted_start_time})
-        data_list.append({"Timestamp": "End Time", "Temperature": "-", "Humidity": formatted_end_time})
+        data_list.append({"Timestamp": "Start Time", "Temperature": "-", "Humidity": "-", "CO2_Level": formatted_start_time})
+        data_list.append({"Timestamp": "End Time", "Temperature": "-", "Humidity": "-", "CO2_Level": formatted_end_time})
 
+        # 데이터프레임 생성 및 엑셀 저장
         df = pd.DataFrame(data_list)
-        file_path = "dht22_data.xlsx"
+        file_path = "sensor_data.xlsx"
         df.to_excel(file_path, index=False)
         print(f"Excel file saved as '{file_path}'")
 
@@ -75,42 +97,13 @@ def collect_and_save_data(duration=30):
         print("Data collection stopped by user.")
 
     finally:
-        ser.close()
+        dht22_port.close()
+        cm1106_port.close()
 
 # 프로그램 실행
 if __name__ == "__main__":
-    excel_file = collect_and_save_data(duration=1)  # 30분 동안 데이터 수집
+    excel_file = collect_and_save_data(duration=30)  # 30분 동안 데이터 수집
     send_email(excel_file)  # 수집된 데이터를 이메일로 전송
-
-
-
-
-
-
-Traceback (most recent call last):
-  File "temp_data_logger.py", line 79, in <module>
-    send_email(excel_file)  # 수집된 데이터를 이메일로 전송
-  File "temp_data_logger.py", line 31, in send_email
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-  File "/usr/lib/python3.6/smtplib.py", line 1031, in __init__
-    source_address)
-  File "/usr/lib/python3.6/smtplib.py", line 251, in __init__
-    (code, msg) = self.connect(host, port)
-  File "/usr/lib/python3.6/smtplib.py", line 336, in connect
-    self.sock = self._get_socket(host, port, self.timeout)
-  File "/usr/lib/python3.6/smtplib.py", line 1037, in _get_socket
-    self.source_address)
-  File "/usr/lib/python3.6/socket.py", line 704, in create_connection
-    for res in getaddrinfo(host, port, 0, SOCK_STREAM):
-  File "/usr/lib/python3.6/socket.py", line 745, in getaddrinfo
-    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
-socket.gaierror: [Errno -2] Name or service not known
-
-
-
-
-
-
 
     
 day 1 : 
