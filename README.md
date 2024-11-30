@@ -165,6 +165,42 @@ if __name__ == "__main__":
 
 
 잭슨 나노 일대기
+
+dli@dli:~$ python3 email.py
+Traceback (most recent call last):
+  File "email.py", line 1, in <module>
+    import smtplib
+  File "/usr/lib/python3.6/smtplib.py", line 47, in <module>
+    import email.utils
+  File "/home/dli/email.py", line 2, in <module>
+    from email.mime.multipart import MIMEMultipart
+ModuleNotFoundError: No module named 'email.mime'; 'email' is not a package
+Error in sys.excepthook:
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/apport_python_hook.py", line 72, in apport_excepthook
+    from apport.fileutils import likely_packaged, get_recent_crashes
+  File "/usr/lib/python3/dist-packages/apport/__init__.py", line 5, in <module>
+    from apport.report import Report
+  File "/usr/lib/python3/dist-packages/apport/report.py", line 21, in <module>
+    from urllib.request import urlopen
+  File "/usr/lib/python3.6/urllib/request.py", line 86, in <module>
+    import email
+  File "/home/dli/email.py", line 1, in <module>
+    import smtplib
+  File "/usr/lib/python3.6/smtplib.py", line 47, in <module>
+    import email.utils
+ModuleNotFoundError: No module named 'email.utils'; 'email' is not a package
+
+Original exception was:
+Traceback (most recent call last):
+  File "email.py", line 1, in <module>
+    import smtplib
+  File "/usr/lib/python3.6/smtplib.py", line 47, in <module>
+    import email.utils
+  File "/home/dli/email.py", line 2, in <module>
+    from email.mime.multipart import MIMEMultipart
+ModuleNotFoundError: No module named 'email.mime'; 'email' is not a package
+
 ===============
 import serial
 import pandas as pd
