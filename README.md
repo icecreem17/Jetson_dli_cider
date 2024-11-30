@@ -1,49 +1,37 @@
 # jetson_dli_cider
 
 
-python3 /home/dli/save1_data.py
-104.019a received: 12,08,6
-104.019 data format: 12,08,6
-Raw data received: 2.04.010
-Invalid data format: 2.04.010
-Raw data received: 2.3040.010
-Invalid data format: 2.3040.010
-Raw data received: 2.04.015
-Invalid data format: 2.04.015
-Raw data received: 1.04.010
-Invalid data format: 1.04.010
-Traceback (most recent call last):
-  File "/home/dli/save1_data.py", line 56, in <module>
-    collect_and_save_data(duration=1)  # 30분 동안 데이터 수집
-  File "/home/dli/save1_data.py", line 17, in collect_and_save_data
-    raw_data = sensor_port.readline().decode('utf-8').strip()
-  File "/home/dli/.local/lib/python3.6/site-packages/serial/serialposix.py", line 596, in read
-    'device reports readiness to read but returned no data '
-serial.serialutil.SerialException: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
+#include "DHT.h"
 
+#define DHTPIN 2     // DHT22 센서 핀
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
 
-dli@dli:~$ ls /home/dli/save1_data.xlsx
-ls: cannot access '/home/dli/save1_data.xlsx': No such file or directory
+void setup() {
+  Serial.begin(9600); // 시리얼 통신 시작
+  dht.begin();
+}
 
+void loop() {
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+  int co2 = analogRead(A0); // CO2 센서 데이터를 읽기 (예시)
 
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Error reading DHT sensor data!");
+    delay(2000);
+    return;
+  }
 
-[Unit]
-Description=save1 Data collector service
-After=multi-user.target
+  // 쉼표로 구분된 데이터 전송
+  Serial.print(temperature);
+  Serial.print(",");
+  Serial.print(humidity);
+  Serial.print(",");
+  Serial.println(co2);
 
-[Service]
-ExecStart=/usr/bin/python3 /home/dli/save1_data.py
-Restart=always
-User=dli
-
-[Install]
-WantedBy=multi-user.target
-
-
-
-python3 /home/dli/save1_data.py
-python3: can't open file '/home/dli/save1_data.py': [Errno 2] No such file or directory
-
+  delay(2000); // 2초 간격으로 데이터 전송
+}
 
 
 
