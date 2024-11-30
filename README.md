@@ -34,6 +34,74 @@ void loop() {
 
   delay(2000);  // 2초 대기 후 다음 데이터 읽기
 }
+>>파이썬 저장 코드
+import serial
+import pandas as pd
+import time
+
+# 시리얼 포트 설정 (Jetson Nano의 UART 포트 사용)
+try:
+    sensor_port = serial.Serial('/dev/ttyUSB0', 9600, timeout=2)  # Arduino 연결 포트
+except serial.SerialException as e:
+    print(f"Error: Could not open port. {e}")
+    exit(1)
+
+data_list = []
+
+# 데이터 수집 및 저장 함수
+def collect_and_save_data(duration=1):  # 기본값: 1분 동안 실행
+    start_time = time.time()
+    formatted_start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))
+
+    try:
+        while time.time() - start_time < duration * 60:  # 정해진 시간 동안 실행
+            if sensor_port.in_waiting > 0:
+                raw_data = sensor_port.readline().decode('utf-8').strip()
+                print(f"Raw data received: {raw_data}")
+                try:
+                    # 데이터가 쉼표로 구분된 3개의 값인지 확인
+                    if len(raw_data.split(",")) == 3:
+                        temperature, humidity, co2 = raw_data.split(",")
+                        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                        data_list.append({
+                            "Timestamp": timestamp,
+                            "Temperature": float(temperature),
+                            "Humidity": float(humidity),
+                            "CO2_Level": float(co2)
+                        })
+                        print(f"Parsed: Temperature={temperature}, Humidity={humidity}, CO2={co2}")
+                    else:
+                        print(f"Invalid data format: {raw_data}")
+                except ValueError as e:
+                    print(f"Parsing error: {raw_data}. Error: {e}")
+            else:
+                print("No data received from sensor. Waiting...")
+
+        # 시작 시간과 종료 시간 추가
+        formatted_end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        data_list.append({"Timestamp": "Start Time", "Temperature": "-", "Humidity": "-", "CO2_Level": formatted_start_time})
+        data_list.append({"Timestamp": "End Time", "Temperature": "-", "Humidity": "-", "CO2_Level": formatted_end_time})
+
+        # 데이터프레임 생성 및 엑셀 저장
+        df = pd.DataFrame(data_list)
+        print(df.head())  # 데이터프레임 출력 (확인용)
+        file_path = "/home/dli/sensor_data.xlsx"  # 저장 경로
+        df.to_excel(file_path, index=False)
+        print(f"Excel file saved as '{file_path}'")
+
+    except serial.SerialException as e:
+        print(f"Serial exception: {e}")
+    except KeyboardInterrupt:
+        print("Data collection stopped by user.")
+
+    finally:
+        if sensor_port.is_open:
+            sensor_port.close()
+
+# 프로그램 실행
+if __name__ == "__main__":
+    collect_and_save_data(duration=1)  # 1분 동안 데이터 수집
+
 
 
 
