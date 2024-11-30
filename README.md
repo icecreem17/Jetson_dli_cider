@@ -1,15 +1,18 @@
 # jetson_dli_cider
 [Unit]
-Description=Sensor Data Collector Service
+Description=save1 Data collector service
 After=multi-user.target
 
 [Service]
-ExecStart=/usr/bin/python3 /home/your_username/sensor_data_collector.py
+ExecStart=/usr/bin/python3 /home/dli/save1_data.py
 Restart=always
-User=your_username
+User=dli
 
 [Install]
 WantedBy=multi-user.target
+
+
+
 
 
 잭슨 나노 일대기
