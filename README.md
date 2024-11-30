@@ -48,18 +48,22 @@ def collect_and_save_data(duration=30):
         while time.time() - start_time < duration * 60:  # 정해진 시간(30분) 동안 실행
             if sensor_port.in_waiting > 0:
                 raw_data = sensor_port.readline().decode('utf-8').strip()
+                print(f"Raw data received: {raw_data}")
                 try:
-                    temperature, humidity, co2 = raw_data.split(",")
-                    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-                    data_list.append({
-                        "Timestamp": timestamp,
-                        "Temperature": temperature,
-                        "Humidity": humidity,
-                        "CO2_Level": co2
-                    })
-                    print(f"Received: Temperature={temperature}, Humidity={humidity}, CO2={co2}")
+                    if len(raw_data.split(",")) == 3:
+                        temperature, humidity, co2 = raw_data.split(",")
+                        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                        data_list.append({
+                            "Timestamp": timestamp,
+                            "Temperature": float(temperature),
+                            "Humidity": float(humidity),
+                            "CO2_Level": float(co2)
+                        })
+                        print(f"Parsed: Temperature={temperature}, Humidity={humidity}, CO2={co2}")
+                    else:
+                        print(f"Invalid data format: {raw_data}")
                 except ValueError:
-                    print(f"Invalid data format: {raw_data}")
+                    print(f"Parsing error: {raw_data}")
 
         # 시작 시간과 종료 시간 추가
         formatted_end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
@@ -68,6 +72,7 @@ def collect_and_save_data(duration=30):
 
         # 데이터프레임 생성 및 엑셀 저장
         df = pd.DataFrame(data_list)
+        print(df.head())  # 데이터프레임 출력 (확인용)
         file_path = "sensor_data.xlsx"
         df.to_excel(file_path, index=False)
         print(f"Excel file saved as '{file_path}'")
