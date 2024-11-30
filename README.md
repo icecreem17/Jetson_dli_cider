@@ -1,4 +1,16 @@
 # jetson_dli_cider
+[Unit]
+Description=Sensor Data Collector Service
+After=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/your_username/sensor_data_collector.py
+Restart=always
+User=your_username
+
+[Install]
+WantedBy=multi-user.target
+
 
 잭슨 나노 일대기
 ===============
