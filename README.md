@@ -112,6 +112,47 @@ This report would have more information with
 option enabled in File -> Preferences.
 
 
+#include "DHT.h"
+
+#define DHTPIN 2      // DHT22 센서 핀
+#define DHTTYPE DHT22
+
+#define CM1106PIN 3   // CM1106 센서의 데이터 핀 (소프트웨어 시리얼 사용)
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(9600);  // Jetson Nano와의 시리얼 통신
+  dht.begin();
+}
+
+void loop() {
+  // DHT22 센서 읽기
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+
+  // CM1106 센서 읽기 (예: 아날로그 값으로 측정)
+  int co2 = analogRead(A0);  // CM1106 데이터 핀 연결
+
+  // 데이터 유효성 검사
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Failed to read from DHT sensor!");
+    delay(2000);
+    return;
+  }
+
+  // 쉼표로 구분된 데이터 전송
+  Serial.print(temperature);  // 온도
+  Serial.print(",");
+  Serial.print(humidity);     // 습도
+  Serial.print(",");
+  Serial.println(co2);        // CO2
+
+  delay(2000);  // 2초 대기
+}
+
+
+
     
 day 1 : 
 잭슨 나노 한글 설치까지
