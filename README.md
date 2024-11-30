@@ -81,6 +81,38 @@ def collect_and_save_data(duration=30):
 if __name__ == "__main__":
     excel_file = collect_and_save_data(duration=1)  # 30분 동안 데이터 수집
     send_email(excel_file)  # 수집된 데이터를 이메일로 전송
+
+
+
+
+
+
+Traceback (most recent call last):
+  File "temp_data_logger.py", line 79, in <module>
+    send_email(excel_file)  # 수집된 데이터를 이메일로 전송
+  File "temp_data_logger.py", line 31, in send_email
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+  File "/usr/lib/python3.6/smtplib.py", line 1031, in __init__
+    source_address)
+  File "/usr/lib/python3.6/smtplib.py", line 251, in __init__
+    (code, msg) = self.connect(host, port)
+  File "/usr/lib/python3.6/smtplib.py", line 336, in connect
+    self.sock = self._get_socket(host, port, self.timeout)
+  File "/usr/lib/python3.6/smtplib.py", line 1037, in _get_socket
+    self.source_address)
+  File "/usr/lib/python3.6/socket.py", line 704, in create_connection
+    for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+  File "/usr/lib/python3.6/socket.py", line 745, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno -2] Name or service not known
+
+
+
+
+
+
+
+    
 day 1 : 
 잭슨 나노 한글 설치까지
 ```
