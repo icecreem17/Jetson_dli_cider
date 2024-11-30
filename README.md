@@ -103,6 +103,65 @@ if __name__ == "__main__":
     collect_and_save_data(duration=1)  # 1분 동안 데이터 수집
 
 
+>> 저장된 엑셀파일 메일로 보내는 파이썬 함수
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+import os
+
+def send_email(file_path, sender_email, receiver_email, password):
+    """
+    엑셀 파일을 이메일로 전송하는 함수.
+    
+    Parameters:
+        file_path (str): 첨부할 엑셀 파일 경로
+        sender_email (str): 발신자의 Gmail 주소
+        receiver_email (str): 수신자의 이메일 주소
+        password (str): Gmail 앱 비밀번호
+    """
+    # 파일 존재 여부 확인
+    if not os.path.exists(file_path):
+        print(f"Error: File '{file_path}' does not exist.")
+        return
+
+    try:
+        # 이메일 메시지 설정
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        msg['Subject'] = "Sensor Data (Excel File Attached)"
+
+        # 첨부 파일 설정
+        attachment = MIMEBase('application', 'octet-stream')
+        with open(file_path, 'rb') as file:
+            attachment.set_payload(file.read())
+        encoders.encode_base64(attachment)
+        attachment.add_header('Content-Disposition', f'attachment; filename={os.path.basename(file_path)}')
+        msg.attach(attachment)
+
+        # Gmail SMTP 서버에 연결
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+
+        print(f"Email sent successfully to {receiver_email} with file '{file_path}' attached.")
+
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+# 실행 예제
+if __name__ == "__main__":
+    # 엑셀 파일 경로와 이메일 설정
+    file_path = "/home/your_username/sensor_data.xlsx"  # 저장된 엑셀 파일 경로
+    sender_email = "your_email@gmail.com"              # 발신자의 Gmail 주소
+    receiver_email = "recipient_email@gmail.com"       # 수신자의 이메일 주소
+    password = "your_app_password"                     # Gmail 앱 비밀번호
+
+    # 이메일 전송 함수 호출
+    send_email(file_path, sender_email, receiver_email, password)
+
+
 
 
 잭슨 나노 일대기
