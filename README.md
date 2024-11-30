@@ -90,6 +90,28 @@ if __name__ == "__main__":
     excel_file = collect_and_save_data(duration=1)  # 30분 동안 데이터 수집
     send_email(excel_file)  # 수집된 데이터를 이메일로 전송
 
+    Arduino: 1.8.19 (Linux), Board: "Arduino Uno"
+
+Sketch uses 5452 bytes (16%) of program storage space. Maximum is 32256 bytes.
+Global variables use 561 bytes (27%) of dynamic memory, leaving 1487 bytes for local variables. Maximum is 2048 bytes.
+An error occurred while uploading the sketch
+
+avrdude: stk500_getparm(): (a) protocol error, expect=0x14, resp=0x00
+
+avrdude: stk500_getparm(): (a) protocol error, expect=0x14, resp=0x00
+avrdude: stk500_initialize(): (a) protocol error, expect=0x14, resp=0x00
+avrdude: initialization failed, rc=-1
+         Double check connections and try again, or use -F to override
+         this check.
+
+avrdude: stk500_disable(): protocol error, expect=0x14, resp=0x00
+
+
+This report would have more information with
+"Show verbose output during compilation"
+option enabled in File -> Preferences.
+
+
     
 day 1 : 
 잭슨 나노 한글 설치까지
