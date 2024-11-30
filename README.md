@@ -1,5 +1,27 @@
 # jetson_dli_cider
 
+
+python3 /home/dli/save1_data.py
+104.019a received: 12,08,6
+104.019 data format: 12,08,6
+Raw data received: 2.04.010
+Invalid data format: 2.04.010
+Raw data received: 2.3040.010
+Invalid data format: 2.3040.010
+Raw data received: 2.04.015
+Invalid data format: 2.04.015
+Raw data received: 1.04.010
+Invalid data format: 1.04.010
+Traceback (most recent call last):
+  File "/home/dli/save1_data.py", line 56, in <module>
+    collect_and_save_data(duration=1)  # 30분 동안 데이터 수집
+  File "/home/dli/save1_data.py", line 17, in collect_and_save_data
+    raw_data = sensor_port.readline().decode('utf-8').strip()
+  File "/home/dli/.local/lib/python3.6/site-packages/serial/serialposix.py", line 596, in read
+    'device reports readiness to read but returned no data '
+serial.serialutil.SerialException: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
+
+
 dli@dli:~$ ls /home/dli/save1_data.xlsx
 ls: cannot access '/home/dli/save1_data.xlsx': No such file or directory
 
