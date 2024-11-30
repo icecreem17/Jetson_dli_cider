@@ -233,6 +233,63 @@ if __name__ == "__main__":
 day 1 : 
 잭슨 나노 한글 설치까지
 ```
+import serial
+import pandas as pd
+import time
+
+# 시리얼 포트 설정 (Jetson Nano의 UART 포트 사용)
+sensor_port = serial.Serial('/dev/ttyUSB0', 9600)  # Arduino 연결 포트
+data_list = []
+
+# 데이터 수집 및 저장 함수
+def collect_and_save_data(duration=30):
+    start_time = time.time()
+    formatted_start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))
+
+    try:
+        while time.time() - start_time < duration * 60:  # 30분 동안 실행
+            if sensor_port.in_waiting > 0:
+                raw_data = sensor_port.readline().decode('utf-8').strip()
+                print(f"Raw data received: {raw_data}")
+                try:
+                    # 데이터가 쉼표로 구분된 3개의 값인지 확인
+                    if len(raw_data.split(",")) == 3:
+                        temperature, humidity, co2 = raw_data.split(",")
+                        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                        data_list.append({
+                            "Timestamp": timestamp,
+                            "Temperature": float(temperature),
+                            "Humidity": float(humidity),
+                            "CO2_Level": float(co2)
+                        })
+                        print(f"Parsed: Temperature={temperature}, Humidity={humidity}, CO2={co2}")
+                    else:
+                        print(f"Invalid data format: {raw_data}")
+                except ValueError:
+                    print(f"Parsing error: {raw_data}")
+
+        # 시작 시간과 종료 시간 추가
+        formatted_end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        data_list.append({"Timestamp": "Start Time", "Temperature": "-", "Humidity": "-", "CO2_Level": formatted_start_time})
+        data_list.append({"Timestamp": "End Time", "Temperature": "-", "Humidity": "-", "CO2_Level": formatted_end_time})
+
+        # 데이터프레임 생성 및 엑셀 저장
+        df = pd.DataFrame(data_list)
+        print(df.head())  # 데이터프레임 출력 (확인용)
+        file_path = "/home/your_username/sensor_data.xlsx"  # 저장 경로
+        df.to_excel(file_path, index=False)
+        print(f"Excel file saved as '{file_path}'")
+
+    except KeyboardInterrupt:
+        print("Data collection stopped by user.")
+
+    finally:
+        sensor_port.close()
+
+# 프로그램 실행
+if __name__ == "__main__":
+    collect_and_save_data(duration=30)  # 30분 동안 데이터 수집
+
 
 ![KakaoTalk_20241114_184028807](https://github.com/user-attachments/assets/e7bd0456-608a-486b-8ed4-6df9e4007686)
 ![KakaoTalk_20241114_184028807_01](https://github.com/user-attachments/assets/6f5923d1-277b-4f20-a6fa-071122d3d931)
