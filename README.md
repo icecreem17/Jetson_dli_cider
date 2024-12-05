@@ -1,5 +1,14 @@
 # jetson_dli_cider
 
+use_functions = [
+    {
+        "type": "function",
+        "function": {
+            "name": "measure_pm25",
+            "description": "Measures PM2.5 concentration using a GPIO pin and returns the calculated value in micrograms per cubic meter (ug/m3).",
+        }
+    }
+]
 
 #include "DHT.h"
 
