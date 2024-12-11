@@ -1,5 +1,23 @@
 # jetson_dli_cider
 
+void setup() {
+  Serial.begin(9600);  // Jetson Nano와의 시리얼 통신 시작
+}
+
+void loop() {
+  int co2 = analogRead(A0);  // CO2 데이터 읽기 (예: 아날로그 핀 A0 사용)
+
+  // CO2 데이터 전송
+  Serial.println(co2);  // CO2 데이터 전송
+
+  delay(2000);  // 2초 대기 후 다음 데이터 읽기
+}
+
+
+
+
+
+
 #include "DHT.h"
 
 // DHT22 핀 및 타입 설정
