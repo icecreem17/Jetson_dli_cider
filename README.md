@@ -1,18 +1,38 @@
 # jetson_dli_cider
 
+#include "DHT.h"
 
-if (mySerial.available() > 0) {
-  Serial.print("Data received: ");
-  while (mySerial.available()) {
-    byte b = mySerial.read();
-    Serial.print(b, HEX);
-    Serial.print(" ");
-  }
-  Serial.println();
+// DHT22 핀 및 타입 설정
+#define DHTPIN 2  // DHT22 센서가 연결된 핀
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(9600);  // Jetson Nano와의 시리얼 통신 시작
+  dht.begin();
 }
 
+void loop() {
+  float temperature = dht.readTemperature();  // 온도 읽기
+  float humidity = dht.readHumidity();        // 습도 읽기
+  int co2 = analogRead(A0);                   // CO2 데이터 읽기 (예: 아날로그 핀 A0 사용)
 
+  // 데이터 유효성 검사
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Error reading from DHT sensor!");
+    delay(2000);
+    return;
+  }
 
+  // 쉼표로 구분된 데이터 전송
+  Serial.print(temperature);  // 온도 데이터 전송
+  Serial.print(",");
+  Serial.print(humidity);     // 습도 데이터 전송
+  Serial.print(",");
+  Serial.println(co2);        // CO2 데이터 전송
+
+  delay(2000);  // 2초 대기 후 다음 데이터 읽기
+}
 
 
 
