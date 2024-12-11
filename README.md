@@ -1,5 +1,25 @@
 # jetson_dli_cider
 
+
+if (mySerial.available() > 0) {
+  Serial.print("Data received: ");
+  while (mySerial.available()) {
+    byte b = mySerial.read();
+    Serial.print(b, HEX);
+    Serial.print(" ");
+  }
+  Serial.println();
+}
+
+
+
+
+
+
+
+
+
+
 #include <SoftwareSerial.h>
 
 SoftwareSerial mySerial(10, 11); // RX, TX 핀 설정
