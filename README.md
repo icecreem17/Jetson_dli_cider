@@ -1,4 +1,77 @@
 # jetson_dli_cider
+unsigned char Send_data[4] = {0x11, 0x01, 0x01, 0xED}; // 데이터 요청 명령
+unsigned char Receive_Buff[8];  // 센서에서 수신한 데이터를 저장
+unsigned char recv_cnt = 0;
+unsigned int PPM_Value;
+
+void Send_CMD() {
+  for (int i = 0; i < 4; i++) {
+    Serial.write(Send_data[i]);  // 명령 전송
+    delay(1);
+  }
+}
+
+unsigned char Checksum_cal() {
+  unsigned char SUM = 0;
+  for (int count = 0; count < 7; count++) {
+    SUM += Receive_Buff[count];
+  }
+  return 256 - SUM;
+}
+
+void setup() {
+  Serial.begin(9600);  // 센서와 통신 시작 (UART 통신)
+}
+
+void loop() {
+  Serial.print("Sending...");
+  Send_CMD();  // CO2 데이터를 요청
+  delay(10);   // 센서 응답 대기
+
+  // 센서 데이터 수신
+  recv_cnt = 0;
+  while (Serial.available()) {
+    Receive_Buff[recv_cnt++] = Serial.read();  // 데이터 수신
+    if (recv_cnt == 8) break;  // 8바이트 수신 완료 시 종료
+  }
+
+  // 수신 데이터 처리
+  if (Checksum_cal() == Receive_Buff[7]) {  // 체크섬 확인
+    PPM_Value = (Receive_Buff[3] << 8) | Receive_Buff[4];  // PPM 값 계산
+    Serial.print("PPM: ");
+    Serial.println(PPM_Value);
+  } else {
+    Serial.println("CHECKSUM Error");
+  }
+
+  delay(1000);  // 1초 간격으로 데이터 요청
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #include <SoftwareSerial.h>
 
 SoftwareSerial mySerial(13, 11);
