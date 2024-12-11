@@ -1,4 +1,59 @@
 # jetson_dli_cider
+#include <SoftwareSerial.h>
+
+SoftwareSerial mySerial(13, 11);
+unsigned char Send_data[4] = {0x11, 0x01, 0x01, 0xED};
+unsigned char Receive_Buff[8];
+unsigned char recv_cnt = 0;
+unsigned int PPM_Value;
+
+void Send_CMD(void) {
+  for (int i = 0; i < 4; i++) {
+    mySerial.write(Send_data[i]);
+    delay(1);
+  }
+}
+
+unsigned char Checksum_cal(void) {
+  unsigned char SUM = 0;
+  for (int count = 0; count < 7; count++) {
+    SUM += Receive_Buff[count];
+  }
+  return 256 - SUM;
+}
+
+void setup() {
+  pinMode(13, INPUT);
+  pinMode(11, OUTPUT);
+  Serial.begin(9600);
+  mySerial.begin(9600);
+}
+
+void loop() {
+  Serial.print("Sending...");
+  Send_CMD();
+  while (mySerial.available()) {
+    Receive_Buff[recv_cnt++] = mySerial.read();
+    if (recv_cnt == 8) {
+      recv_cnt = 0;
+      break;
+    }
+  }
+
+  if (Checksum_cal() == Receive_Buff[7]) {
+    PPM_Value = Receive_Buff[3] << 8 | Receive_Buff[4];
+    Serial.print("PPM: ");
+    Serial.println(PPM_Value);
+  } else {
+    Serial.println("CHECKSUM Error");
+  }
+
+  delay(1000);
+}
+
+
+
+
 
 #include <SoftwareSerial.h>
 
