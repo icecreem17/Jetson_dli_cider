@@ -39,10 +39,10 @@ try:
             print(f"[아두이노 데이터] {line}")
 
             if line.startswith("CO2:"):
+                global alert_1200_sent, alert_1700_sent  # global 선언
+
                 co2_value = int(line.split(":")[1])
                 print(f"[센서] 현재 CO2 농도: {co2_value} ppm")
-
-                global alert_1200_sent, alert_1700_sent  # global 선언 위치 수정
 
                 # 임계값 확인 및 알림 전송 (한 번만 전송)
                 if co2_value > THRESHOLD_2 and not alert_1700_sent:
@@ -69,7 +69,6 @@ finally:
     if ser and ser.is_open:  # ser 변수가 정의되었는지 확인
         ser.close()
         print("[센서] 시리얼 포트 닫힘")
-
 
 
 
