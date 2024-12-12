@@ -10,25 +10,25 @@ def measure_co2():
         int: CO2 농도 (ppm).
     """
 
-    SERIAL_PORT = "/dev/ttyUSB0"  # 또는 실제 연결된 포트 (예: COM3)
+    SERIAL_PORT = "/dev/ttyUSB0"  # 실제 연결된 포트로 변경 (예: COM3)
     BAUD_RATE = 9600
 
     try:
         # 시리얼 포트 초기화
-        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
+        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
             ser.write(b'\x11\x01\x01\xED')  # CM1106 센서 명령어
-            time.sleep(2)  # 응답을 기다리는 시간 증가
+            time.sleep(2)  # 응답 대기 시간 증가
 
             # 센서 응답 읽기
             response = ser.read(9)  # 응답 크기를 확인 후 조정 필요
             print(f"Raw response: {response}")  # 디버깅용 응답 출력
             print(f"Response length: {len(response)}")  # 응답 길이 확인
 
-            if len(response) == 9:
+            if len(response) == 9:  # 응답 길이가 예상한 값인 경우
                 co2 = response[2] * 256 + response[3]  # CO2 데이터 해석
                 return co2
             else:
-                print("Error reading sensor data: Invalid response length.")
+                print("Error reading sensor data: Invalid response length or empty response.")
                 return None
 
     except serial.SerialException as e:
