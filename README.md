@@ -1,4 +1,164 @@
 # jetson_dli_cider
+
+import serial
+import time
+
+def measure_co2():
+    """
+    CO2 농도를 측정하여 반환하는 함수.
+
+    Returns:
+        str: CO2 농도 (ppm).
+    """
+
+    SERIAL_PORT = "/dev/ttyUSB0"  # 실제 연결된 포트로 변경 (예: COM3)
+    BAUD_RATE = 9600
+
+    try:
+        # 시리얼 포트 초기화
+        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
+            ser.write(b'\x11\x01\x01\xED')  # CM1106 센서 명령어
+            time.sleep(2)  # 응답 대기 시간 증가
+
+            # 센서 응답 읽기
+            response = ser.read(9).decode('utf-8')  # 응답 문자열로 디코딩
+            print(f"Raw response: {response}")  # 디버깅용 응답 출력
+
+            # 'CO2:734'에서 숫자 부분 추출
+            if response.startswith("CO2:"):
+                co2_value = int(response.split(":")[1].strip())
+                return co2_value
+            else:
+                print("Error reading sensor data: Unexpected response format.")
+                return None
+
+    except serial.SerialException as e:
+        print(f"Serial connection error: {e}")
+        return None
+
+    except Exception as e:
+        print(f"Error during measurement: {e}")
+        return None
+
+
+# 예시: 함수 호출
+if __name__ == "__main__":
+    co2_concentration = measure_co2()
+    if co2_concentration is not None:
+        print(f"Measured CO2 Concentration: {co2_concentration} ppm")
+    else:
+        print("Measurement failed.")
+
+use_functions = [
+    {
+        "type": "function",
+        "function": {
+            "name": "measure_co2",
+            "description": "Reads CO2 concentration from a CM1106 sensor connected via serial port and returns the measured value in ppm."
+        }
+    }
+]
+
+import os
+from openai import OpenAI
+import json
+
+os.environ['OPENAI_API_KEY'] = ''
+
+OpenAI.api_key = os.getenv("OPENAI_API_KEY")
+
+def ask_openai(llm_model, messages, user_message, functions = ''):
+    client = OpenAI()
+    proc_messages = messages
+
+    if user_message != '':
+        proc_messages.append({"role": "user", "content": user_message})
+
+    if functions == '':
+        response = client.chat.completions.create(model=llm_model, messages=proc_messages, temperature = 1.0)
+    else:
+        response = client.chat.completions.create(model=llm_model, messages=proc_messages, tools=functions, tool_choice="auto") # 이전 코드와 바뀐 부분
+
+    response_message = response.choices[0].message
+    tool_calls = response_message.tool_calls
+
+    if tool_calls:
+        # Step 3: call the function
+        # Note: the JSON response may not always be valid; be sure to handle errors
+
+        available_functions = {
+            "measure_co2": measure_co2
+        }
+
+        messages.append(response_message)  # extend conversation with assistant's reply
+
+        # Step 4: send the info for each function call and function response to GPT
+        for tool_call in tool_calls:
+            function_name = tool_call.function.name
+            function_to_call = available_functions[function_name]
+            function_args = json.loads(tool_call.function.arguments)
+
+
+            print(function_args)
+
+            if 'user_prompt' in function_args:
+                function_response = function_to_call(function_args.get('user_prompt'))
+            else:
+                function_response = function_to_call(**function_args)
+
+            proc_messages.append(
+                {
+                    "tool_call_id": tool_call.id,
+                    "role": "tool",
+                    "name": function_name,
+                    "content": function_response,
+                }
+            )  # extend conversation with function response
+        second_response = client.chat.completions.create(
+            model=llm_model,
+            messages=messages,
+        )  # get a new response from GPT where it can see the function response
+
+        assistant_message = second_response.choices[0].message.content
+    else:
+        assistant_message = response_message.content
+
+    text = assistant_message.replace('\n', ' ').replace(' .', '.').strip()
+
+
+    proc_messages.append({"role": "assistant", "content": assistant_message})
+
+    return proc_messages, text
+
+import gradio as gr
+import random
+
+
+messages = []
+
+def process(user_message, chat_history):
+
+    # def ask_openai(llm_model, messages, user_message, functions = ''):
+    proc_messages, ai_message = ask_openai("gpt-4o-mini", messages, user_message, functions= use_functions)
+
+    chat_history.append((user_message, ai_message))
+    return "", chat_history
+
+with gr.Blocks() as demo:
+    chatbot = gr.Chatbot(label="채팅창")
+    user_textbox = gr.Textbox(label="입력")
+    user_textbox.submit(process, [user_textbox, chatbot], [user_textbox, chatbot])
+
+demo.launch(share=True, debug=True)
+
+
+
+
+
+
+
+
+
 import serial
 import time
 
