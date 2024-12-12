@@ -161,6 +161,101 @@ if __name__ == "__main__":
         print("Measurement failed.")
 
 
+
+
+
+import smbus
+import Jetson.GPIO as GPIO
+import time
+import math
+
+# I2C 설정
+I2C_BUS = 1  # Jetson I2C 버스 번호
+SENSOR_ADDRESS = 0x68  # CM1106 I2C 주소
+bus = smbus.SMBus(I2C_BUS)
+
+def read_co2():
+    """
+    CM1106 센서에서 CO2 데이터를 읽어오는 함수.
+    Returns:
+        int: CO2 농도 (ppm) 또는 None (에러 발생 시).
+    """
+    try:
+        # CM1106 센서에서 데이터 요청
+        bus.write_byte(SENSOR_ADDRESS, 0x86)
+        time.sleep(0.1)
+        
+        # 9바이트 읽기
+        data = bus.read_i2c_block_data(SENSOR_ADDRESS, 0, 9)
+        
+        # CO2 값 계산
+        co2 = data[2] << 8 | data[3]
+        return co2
+
+    except Exception as e:
+        print(f"Error reading CO2: {e}")
+        return None
+
+def measure_pm25():
+    """
+    PM2.5 농도를 측정하여 반환하는 함수.
+    Returns:
+        float: PM2.5 농도 (ug/m3) 또는 None (에러 발생 시).
+    """
+    pin = 8
+    sample_time_ms = 30000
+
+    # GPIO 초기화
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(pin, GPIO.IN)
+
+    low_pulse_occupancy = 0
+    start_time = time.time()
+
+    try:
+        # 샘플링 시간 동안 LOW 신호 지속 시간 측정
+        while (time.time() - start_time) * 1000 <= sample_time_ms:
+            pulse_start = time.time()
+            while GPIO.input(pin) == GPIO.LOW:
+                pass
+            pulse_end = time.time()
+
+            # LOW 상태 지속 시간 계산
+            pulse_duration = (pulse_end - pulse_start) * 1e6  # 마이크로초 단위로 변환
+            low_pulse_occupancy += pulse_duration
+
+        # PM2.5 농도 계산
+        ratio = low_pulse_occupancy / (sample_time_ms * 10.0)
+        concentration = (
+            1.1 * math.pow(ratio, 3) - 3.8 * math.pow(ratio, 2) + 520 * ratio + 0.62
+        )
+        return round(concentration, 2)
+
+    except Exception as e:
+        print(f"Error during PM2.5 measurement: {e}")
+        return None
+
+    finally:
+        GPIO.cleanup()
+
+if __name__ == "__main__":
+    while True:
+        # CO2 센서 읽기
+        co2_concentration = read_co2()
+        if co2_concentration is not None:
+            print(f"CO2: {co2_concentration} ppm")
+        else:
+            print("Error reading CO2 sensor data.")
+
+        # PM2.5 센서 읽기
+        pm25_concentration = measure_pm25()
+        if pm25_concentration is not None:
+            print(f"PM2.5: {pm25_concentration} ug/m3")
+        else:
+            print("Error reading PM2.5 sensor data.")
+
+        time.sleep(1)
+
 ------------------------------------------------------
 import serial
 import requests
