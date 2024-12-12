@@ -2,15 +2,11 @@
 
 import serial
 import time
-import openai
 import os
 import json
 import gradio as gr
+from openai import OpenAI
 
-# OpenAI API 키 설정
-openai.api_key = "your-api-key-here"  # OpenAI API 키를 입력하세요
-
-# CM1106 센서로부터 CO2 농도를 측정하는 함수
 def measure_co2():
     """
     CO2 농도를 측정하여 반환하는 함수.
@@ -44,68 +40,6 @@ def measure_co2():
     except Exception as e:
         print(f"Error during measurement: {e}")
         return f"Error: {str(e)}"
-
-# OpenAI와 통합된 챗봇 함수
-def ask_openai(llm_model, messages, user_message, functions=None):
-    if not functions:
-        response = openai.ChatCompletion.create(
-            model=llm_model,
-            messages=messages,
-            temperature=1.0
-        )
-    else:
-        response = openai.ChatCompletion.create(
-            model=llm_model,
-            messages=messages,
-            functions=functions,
-            function_call="auto"
-        )
-
-    response_message = response["choices"][0]["message"]
-
-    if "function_call" in response_message:
-        available_functions = {
-            "measure_co2": measure_co2
-        }
-
-        function_name = response_message["function_call"]["name"]
-        function_args = json.loads(response_message["function_call"]["arguments"])
-        function_response = available_functions[function_name]()
-
-        messages.append({"role": "function", "name": function_name, "content": function_response})
-
-        second_response = openai.ChatCompletion.create(
-            model=llm_model,
-            messages=messages,
-        )
-        return second_response["choices"][0]["message"]["content"]
-    else:
-        return response_message["content"]
-
-# Gradio와 통합
-def process(user_message, chat_history):
-    messages = [
-        {"role": "system", "content": "You are a helpful assistant."}
-    ]
-
-    ai_message = ask_openai("gpt-4", messages, user_message, functions=[
-        {
-            "name": "measure_co2",
-            "description": "Reads CO2 concentration from a CM1106 sensor connected via serial port and returns the measured value in ppm."
-        }
-    ])
-
-    chat_history.append((user_message, ai_message))
-    return "", chat_history
-
-with gr.Blocks() as demo:
-    chatbot = gr.Chatbot(label="CO2 챗봇 서비스")
-    user_textbox = gr.Textbox(label="메시지를 입력하세요")
-    user_textbox.submit(process, [user_textbox, chatbot], [user_textbox, chatbot])
-
-demo.launch(share=True, debug=True)
-
-
 
 
 
