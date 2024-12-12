@@ -1,4 +1,15 @@
 # jetson_dli_cider
+use_functions = [
+    {
+        "type": "function",
+        "function": {
+            "name": "measure_co2",
+            "description": "Reads CO2 concentration from a CM1106 sensor connected via serial port and returns the measured value in ppm."
+        }
+    }
+]
+
+
 import serial
 import time
 
