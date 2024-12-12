@@ -1,4 +1,59 @@
 # jetson_dli_cider
+import serial
+import requests
+
+# 아두이노 시리얼 포트 설정
+SERIAL_PORT = '/dev/ttyUSB0'  # 아두이노가 연결된 포트 확인 후 설정
+BAUD_RATE = 9600  # 아두이노와 동일한 보드레이트 설정
+
+# 임계값 설정
+THRESHOLD_1 = 1200
+THRESHOLD_2 = 1700
+
+# 디스코드 웹훅 URL
+DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1316656864821379113/sL8ukrsNilzQeluyonvxZSLNxT0POnQRdQHL0TtbaQklzV1faYpwHzC43UQK8AYKc9YN'
+
+def send_discord_alert(message):
+    """디스코드로 알림 메시지를 전송합니다."""
+    data = {"content": message}
+    response = requests.post(DISCORD_WEBHOOK_URL, json=data)
+    if response.status_code == 204:
+        print("[디스코드 알림] 메시지가 성공적으로 전송되었습니다.")
+    else:
+        print(f"[디스코드 알림] 메시지 전송 실패: {response.status_code}")
+
+try:
+    # 아두이노 시리얼 포트 열기
+    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+    print("아두이노 연결 완료")
+
+    while True:
+        if ser.in_waiting > 0:
+            line = ser.readline().decode('utf-8').strip()  # 아두이노에서 데이터 읽기
+            print(f"[아두이노 데이터] {line}")
+
+            if line.startswith("CO2:"):
+                co2_value = int(line.split(":")[1])
+                print(f"[센서] 현재 CO2 농도: {co2_value} ppm")
+
+                # 임계값 확인 및 알림 전송
+                if co2_value > THRESHOLD_2:
+                    alert_message = f"[경고] CO2 농도가 {co2_value} ppm으로 임계값 1700 ppm을 초과했습니다!"
+                    print(alert_message)
+                    send_discord_alert(alert_message)
+                elif co2_value > THRESHOLD_1:
+                    alert_message = f"[주의] CO2 농도가 {co2_value} ppm으로 임계값 1200 ppm을 초과했습니다!"
+                    print(alert_message)
+                    send_discord_alert(alert_message)
+
+except Exception as e:
+    print(f"[오류] {e}")
+
+finally:
+    if ser.is_open:
+        ser.close()
+        print("[센서] 시리얼 포트 닫힘")
+
 
 
 ----------------------------------------
