@@ -52,6 +52,24 @@ use_functions = [
     }
 ]
 
+use_functions = [
+    {
+        "type": "function",
+        "function": {
+            "name": "read_sensor_data",
+            "description": "Reads CO2 sensor data from a serial connection and interprets the response. It checks CO2 levels and provides feedback on whether ventilation is necessary."
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "main",
+            "description": "Establishes a serial connection and continuously reads sensor data in a loop, providing real-time feedback on CO2 levels."
+        }
+    }
+]
+
+
 
 
 ------------------------------------------------------
