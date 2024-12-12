@@ -42,9 +42,9 @@ try:
                 co2_value = int(line.split(":")[1])
                 print(f"[센서] 현재 CO2 농도: {co2_value} ppm")
 
-                # 임계값 확인 및 알림 전송 (한 번만 전송)
-                global alert_1200_sent, alert_1700_sent
+                global alert_1200_sent, alert_1700_sent  # global 선언 위치 수정
 
+                # 임계값 확인 및 알림 전송 (한 번만 전송)
                 if co2_value > THRESHOLD_2 and not alert_1700_sent:
                     alert_message = f"[경고] CO2 농도가 {co2_value} ppm으로 임계값 1700 ppm을 초과했습니다!"
                     print(alert_message)
@@ -70,30 +70,6 @@ finally:
         ser.close()
         print("[센서] 시리얼 포트 닫힘")
 
-
-----------------------------------------
-젯슨 나노와 아두이노 연결하는 코드
-#include <cm1106_i2c.h>
-
-CM1106_I2C cm1106_i2c;
-
-void setup() {
-  cm1106_i2c.begin();
-  Serial.begin(9600);
-  delay(1000);
-}
-
-void loop() {
-  uint8_t ret = cm1106_i2c.measure_result();
-
-  if (ret == 0) {
-    Serial.print("CO2:");
-    Serial.println(cm1106_i2c.co2); // CO2 데이터를 시리얼로 전송
-  } else {
-    Serial.println("Error reading sensor data.");
-  }
-  delay(1000);
-}
 
 
 ------------------------------------------
