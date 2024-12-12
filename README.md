@@ -42,33 +42,70 @@ def main():
 if __name__ == "__main__":
     main()
 
-use_functions = [
-    {
-        "type": "function",
-        "function": {
-            "name": "",
-            "description": "",
-        }
-    }
-]
 
-use_functions = [
-    {
-        "type": "function",
-        "function": {
-            "name": "read_sensor_data",
-            "description": "Reads CO2 sensor data from a serial connection and interprets the response. It checks CO2 levels and provides feedback on whether ventilation is necessary."
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "main",
-            "description": "Establishes a serial connection and continuously reads sensor data in a loop, providing real-time feedback on CO2 levels."
-        }
-    }
-]
 
+
+
+    
+
+import Jetson.GPIO as GPIO
+import time
+import math
+
+def measure_pm25():
+    """
+    PM2.5 농도를 측정하여 반환하는 함수.
+
+    Args:
+        pin (int): 측정에 사용할 GPIO 핀 번호 (BCM 핀 기준).
+        sample_time_ms (int): 샘플링 시간 (밀리초 단위).
+
+    Returns:
+        float: PM2.5 농도 (ug/m3).
+    """
+
+    pin = 8
+    sample_time_ms=30000
+    # GPIO 초기화
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(pin, GPIO.IN)
+
+    low_pulse_occupancy = 0
+    start_time = time.time()
+
+    try:
+        # 샘플링 시간 동안 LOW 신호 지속 시간 측정
+        while (time.time() - start_time) * 1000 <= sample_time_ms:
+            pulse_start = time.time()
+            while GPIO.input(pin) == GPIO.LOW:
+                pass
+            pulse_end = time.time()
+
+            # LOW 상태 지속 시간 계산
+            pulse_duration = (pulse_end - pulse_start) * 1e6  # 마이크로초 단위로 변환
+            low_pulse_occupancy += pulse_duration
+
+        # PM2.5 농도 계산
+        ratio = low_pulse_occupancy / (sample_time_ms * 10.0)
+        concentration = (
+            1.1 * math.pow(ratio, 3) - 3.8 * math.pow(ratio, 2) + 520 * ratio + 0.62
+        )
+        return str(round(concentration,2))
+
+    except Exception as e:
+        print(f"Error during measurement: {e}")
+        return None
+
+    finally:
+        GPIO.cleanup()
+
+# 예시: 함수 호출
+if __name__ == "__main__":
+    pm25_concentration = measure_pm25()
+    if pm25_concentration is not None:
+        print(f"Measured PM2.5 Concentration: {pm25_concentration:} ug/m3")
+    else:
+        print("Measurement failed.")
 
 
 
