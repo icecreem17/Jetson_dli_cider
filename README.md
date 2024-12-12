@@ -22,8 +22,10 @@ def send_discord_alert(message):
     else:
         print(f"[디스코드 알림] 메시지 전송 실패: {response.status_code}")
 
+ser = None  # 초기값 설정
+
 try:
-    # 아두이노 시리얼 포트 열기
+    # 시리얼 포트 열기
     ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
     print("아두이노 연결 완료")
 
@@ -50,7 +52,7 @@ except Exception as e:
     print(f"[오류] {e}")
 
 finally:
-    if ser.is_open:
+    if ser and ser.is_open:  # ser 변수가 정의되었는지 확인
         ser.close()
         print("[센서] 시리얼 포트 닫힘")
 
