@@ -42,6 +42,16 @@ def main():
 if __name__ == "__main__":
     main()
 
+use_functions = [
+    {
+        "type": "function",
+        "function": {
+            "name": "",
+            "description": "",
+        }
+    }
+]
+
 
 
 ------------------------------------------------------
