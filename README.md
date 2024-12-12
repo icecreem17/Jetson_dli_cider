@@ -48,65 +48,58 @@ if __name__ == "__main__":
 
     
 
-import Jetson.GPIO as GPIO
+import serial
 import time
-import math
 
-def measure_pm25():
+def measure_co2():
     """
-    PM2.5 농도를 측정하여 반환하는 함수.
-
-    Args:
-        pin (int): 측정에 사용할 GPIO 핀 번호 (BCM 핀 기준).
-        sample_time_ms (int): 샘플링 시간 (밀리초 단위).
+    CO2 농도를 측정하여 반환하는 함수.
 
     Returns:
-        float: PM2.5 농도 (ug/m3).
+        int: CO2 농도 (ppm).
     """
 
-    pin = 8
-    sample_time_ms=30000
-    # GPIO 초기화
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(pin, GPIO.IN)
-
-    low_pulse_occupancy = 0
-    start_time = time.time()
+    SERIAL_PORT = "/dev/ttyUSB0"  # 또는 실제 연결된 포트 (예: COM3)
+    BAUD_RATE = 9600
 
     try:
-        # 샘플링 시간 동안 LOW 신호 지속 시간 측정
-        while (time.time() - start_time) * 1000 <= sample_time_ms:
-            pulse_start = time.time()
-            while GPIO.input(pin) == GPIO.LOW:
-                pass
-            pulse_end = time.time()
+        # 시리얼 포트 초기화
+        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
+            ser.write(b'\x11\x01\x01\xED')  # CM1106 센서 명령어
+            time.sleep(1)
 
-            # LOW 상태 지속 시간 계산
-            pulse_duration = (pulse_end - pulse_start) * 1e6  # 마이크로초 단위로 변환
-            low_pulse_occupancy += pulse_duration
+            # 센서 응답 읽기
+            response = ser.read(9)  # 응답 크기를 확인 후 조정 필요
+            if len(response) == 9:
+                co2 = response[2] * 256 + response[3]  # CO2 데이터 해석
+                return co2
+            else:
+                print("Error reading sensor data: Invalid response length.")
+                return None
 
-        # PM2.5 농도 계산
-        ratio = low_pulse_occupancy / (sample_time_ms * 10.0)
-        concentration = (
-            1.1 * math.pow(ratio, 3) - 3.8 * math.pow(ratio, 2) + 520 * ratio + 0.62
-        )
-        return str(round(concentration,2))
+    except serial.SerialException as e:
+        print(f"Serial connection error: {e}")
+        return None
 
     except Exception as e:
         print(f"Error during measurement: {e}")
         return None
 
-    finally:
-        GPIO.cleanup()
-
 # 예시: 함수 호출
 if __name__ == "__main__":
-    pm25_concentration = measure_pm25()
-    if pm25_concentration is not None:
-        print(f"Measured PM2.5 Concentration: {pm25_concentration:} ug/m3")
+    co2_concentration = measure_co2()
+    if co2_concentration is not None:
+        print(f"Measured CO2 Concentration: {co2_concentration} ppm")
+
+        # CO2 농도에 따른 메시지 출력
+        if co2_concentration >= 1700:
+            print("\u26a0\ufe0f CO2 level is very high! Ventilation is necessary!")
+        elif co2_concentration >= 1200:
+            print("\ud83d\udd04 CO2 level is elevated. Ventilation is recommended.")
+        else:
+            print("Operating normal.")
     else:
         print("Measurement failed.")
-
 
 
 ------------------------------------------------------
