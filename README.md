@@ -1,4 +1,59 @@
 # jetson_dli_cider
+import serial
+from discord_webhook import DiscordWebhook
+import time
+
+# CM1106 센서 시리얼 포트 설정
+SERIAL_PORT = '/dev/ttyUSB0'  # CM1106이 연결된 포트
+BAUD_RATE = 9600  # CM1106 기본 전송 속도
+
+# 임계값 설정
+THRESHOLD_1 = 1200
+THRESHOLD_2 = 1700
+
+# 디스코드 웹훅 URL
+DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/your_webhook_url_here'
+
+def send_discord_alert(message):
+    """디스코드로 알림 메시지를 전송합니다."""
+    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, content=message)
+    response = webhook.execute()
+
+try:
+    # 시리얼 포트 열기
+    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+    print("CM1106 센서 연결 완료")
+
+    while True:
+        # 센서 데이터 읽기
+        if ser.in_waiting > 0:
+            data = ser.read(9)  # CM1106 데이터는 9바이트
+            if len(data) == 9 and data[0] == 0x16 and data[1] == 0x04:
+                co2_value = data[2] * 256 + data[3]  # CO2 농도 계산
+                print(f"현재 CO2 농도: {co2_value} ppm")
+
+                # 임계값 확인 및 알림 전송
+                if co2_value > THRESHOLD_2:
+                    send_discord_alert(f"경고: CO2 농도가 {co2_value} ppm으로 임계값 1700 ppm을 초과했습니다!")
+                elif co2_value > THRESHOLD_1:
+                    send_discord_alert(f"주의: CO2 농도가 {co2_value} ppm으로 임계값 1200 ppm을 초과했습니다!")
+
+        time.sleep(1)  # 1초 간격으로 데이터 읽기
+
+except Exception as e:
+    print(f"오류 발생: {e}")
+
+finally:
+    if ser.is_open:
+        ser.close()
+        print("시리얼 포트 닫힘")
+
+
+
+
+
+
+------------------------------
 
 #include <cm1106_i2c.h>
 
