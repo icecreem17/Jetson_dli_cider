@@ -1,35 +1,46 @@
 # jetson_dli_cider
-#include <cm1106_i2c.h>
+import serial
+import time
 
-CM1106_I2C cm1106_i2c;
+# 시리얼 포트 설정 (포트를 실제 연결된 포트로 변경하세요)
+SERIAL_PORT = "/dev/ttyUSB0"  # 또는 COM 포트 (예: COM3)
+BAUD_RATE = 9600
 
-void setup() {
-  cm1106_i2c.begin();
-  Serial.begin(9600);
-  delay(1000);
-}
+# 센서 데이터 읽기 함수
+def read_sensor_data(serial_conn):
+    try:
+        serial_conn.write(b'\x11\x01\x01\xED')  # CM1106에 적합한 명령어로 수정 필요
+        time.sleep(1)
+        response = serial_conn.read(9)  # 센서 응답 읽기 (응답 크기를 확인하세요)
+        if len(response) == 9:  # 응답이 정상일 경우
+            co2 = response[2] * 256 + response[3]  # CO2 데이터 해석
+            print(f"CO2: {co2} ppm")
+            # CO2 농도에 따른 메시지 출력
+            if co2 >= 1700:
+                print("⚠️ CO2 level is very high! Ventilation is necessary!")
+            elif co2 >= 1200:
+                print("🔄 CO2 level is elevated. Ventilation is recommended.")
+            else:
+                print("Operating normal.")  # 정상 동작 메시지
+        else:
+            print("Error reading sensor data.")
+    except Exception as e:
+        print(f"Error: {e}")
 
-void loop() {
-  uint8_t ret = cm1106_i2c.measure_result();
+# 메인 루프
+def main():
+    try:
+        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
+            print("Serial connection established.")
+            time.sleep(1)
+            while True:
+                read_sensor_data(ser)
+                time.sleep(1)  # 1초 대기
+    except serial.SerialException as e:
+        print(f"Serial connection error: {e}")
 
-  if (ret == 0) {
-    Serial.print("CO2:");
-    Serial.println(cm1106_i2c.co2); 
-    Serial.println("Operating normal");// CO2 데이터를 시리얼로 전송
-  } else {
-    Serial.println("Error reading sensor data.");
-  }
-  delay(1000);
-}
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    main()
 
 
 
