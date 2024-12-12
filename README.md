@@ -16,6 +16,29 @@ use_functions = [
         }
     }
 ]
+----------------
+
+def provide_co2_info(co2_value):
+    """
+    CO2 농도를 기반으로 추가 정보를 생성하는 함수.
+
+    Args:
+        co2_value (str): 측정된 CO2 농도 (ppm).
+
+    Returns:
+        str: CO2 농도와 관련된 메시지.
+    """
+    try:
+        ppm = int(co2_value)  # CO2 농도를 정수로 변환
+        if ppm >= 1000:
+            return f"CO2 농도는 {ppm} ppm입니다. 이 수준에서는 두통, 피로와 같은 증상이 발생할 수 있습니다. 환기를 권장합니다."
+        else:
+            return f"CO2 농도는 {ppm} ppm입니다. 정상 수준이며 특별한 문제가 없습니다."
+    except ValueError:
+        return "CO2 농도를 해석하는 데 문제가 발생했습니다."   
+        
+---------------------
+
 
 
 import serial
