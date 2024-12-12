@@ -2,7 +2,7 @@
 
 https://discord.com/api/webhooks/1316656864821379113/sL8ukrsNilzQeluyonvxZSLNxT0POnQRdQHL0TtbaQklzV1faYpwHzC43UQK8AYKc9YN
 import serial
-from discord_webhook import DiscordWebhook
+import requests
 import time
 
 # CM1106 센서 시리얼 포트 설정
@@ -18,8 +18,12 @@ DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/your_webhook_url_here'
 
 def send_discord_alert(message):
     """디스코드로 알림 메시지를 전송합니다."""
-    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, content=message)
-    response = webhook.execute()
+    data = {"content": message}
+    response = requests.post(DISCORD_WEBHOOK_URL, json=data)
+    if response.status_code == 204:
+        print("메시지가 성공적으로 전송되었습니다.")
+    else:
+        print(f"메시지 전송 실패: {response.status_code}")
 
 try:
     # 시리얼 포트 열기
@@ -49,8 +53,6 @@ finally:
     if ser.is_open:
         ser.close()
         print("시리얼 포트 닫힘")
-
-
 
 
 
