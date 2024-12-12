@@ -21,9 +21,9 @@ def send_discord_alert(message):
     data = {"content": message}
     response = requests.post(DISCORD_WEBHOOK_URL, json=data)
     if response.status_code == 204:
-        print("메시지가 성공적으로 전송되었습니다.")
+        print("[디스코드 알림] 메시지가 성공적으로 전송되었습니다.")
     else:
-        print(f"메시지 전송 실패: {response.status_code}")
+        print(f"[디스코드 알림] 메시지 전송 실패: {response.status_code}")
 
 try:
     # 시리얼 포트 열기
@@ -36,23 +36,27 @@ try:
             data = ser.read(9)  # CM1106 데이터는 9바이트
             if len(data) == 9 and data[0] == 0x16 and data[1] == 0x04:
                 co2_value = data[2] * 256 + data[3]  # CO2 농도 계산
-                print(f"현재 CO2 농도: {co2_value} ppm")
+                print(f"[센서] 현재 CO2 농도: {co2_value} ppm")
 
                 # 임계값 확인 및 알림 전송
                 if co2_value > THRESHOLD_2:
-                    send_discord_alert(f"경고: CO2 농도가 {co2_value} ppm으로 임계값 1700 ppm을 초과했습니다!")
+                    alert_message = f"[경고] CO2 농도가 {co2_value} ppm으로 임계값 1700 ppm을 초과했습니다!"
+                    print(alert_message)
+                    send_discord_alert(alert_message)
                 elif co2_value > THRESHOLD_1:
-                    send_discord_alert(f"주의: CO2 농도가 {co2_value} ppm으로 임계값 1200 ppm을 초과했습니다!")
+                    alert_message = f"[주의] CO2 농도가 {co2_value} ppm으로 임계값 1200 ppm을 초과했습니다!"
+                    print(alert_message)
+                    send_discord_alert(alert_message)
 
         time.sleep(1)  # 1초 간격으로 데이터 읽기
 
 except Exception as e:
-    print(f"오류 발생: {e}")
+    print(f"[오류] {e}")
 
 finally:
     if ser.is_open:
         ser.close()
-        print("시리얼 포트 닫힘")
+        print("[센서] 시리얼 포트 닫힘")
 
 
 
