@@ -13,6 +13,10 @@ THRESHOLD_2 = 1700
 # 디스코드 웹훅 URL
 DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1316656864821379113/sL8ukrsNilzQeluyonvxZSLNxT0POnQRdQHL0TtbaQklzV1faYpwHzC43UQK8AYKc9YN'
 
+# 알림 상태 추적 변수
+alert_1200_sent = False
+alert_1700_sent = False
+
 def send_discord_alert(message):
     """디스코드로 알림 메시지를 전송합니다."""
     data = {"content": message}
@@ -38,15 +42,25 @@ try:
                 co2_value = int(line.split(":")[1])
                 print(f"[센서] 현재 CO2 농도: {co2_value} ppm")
 
-                # 임계값 확인 및 알림 전송
-                if co2_value > THRESHOLD_2:
+                # 임계값 확인 및 알림 전송 (한 번만 전송)
+                global alert_1200_sent, alert_1700_sent
+
+                if co2_value > THRESHOLD_2 and not alert_1700_sent:
                     alert_message = f"[경고] CO2 농도가 {co2_value} ppm으로 임계값 1700 ppm을 초과했습니다!"
                     print(alert_message)
                     send_discord_alert(alert_message)
-                elif co2_value > THRESHOLD_1:
+                    alert_1700_sent = True  # 알림 상태 업데이트
+
+                elif co2_value > THRESHOLD_1 and not alert_1200_sent:
                     alert_message = f"[주의] CO2 농도가 {co2_value} ppm으로 임계값 1200 ppm을 초과했습니다!"
                     print(alert_message)
                     send_discord_alert(alert_message)
+                    alert_1200_sent = True  # 알림 상태 업데이트
+
+                # 값이 임계값 아래로 떨어지면 알림 상태 초기화
+                if co2_value <= THRESHOLD_1:
+                    alert_1200_sent = False
+                    alert_1700_sent = False
 
 except Exception as e:
     print(f"[오류] {e}")
@@ -55,7 +69,6 @@ finally:
     if ser and ser.is_open:  # ser 변수가 정의되었는지 확인
         ser.close()
         print("[센서] 시리얼 포트 닫힘")
-
 
 
 ----------------------------------------
