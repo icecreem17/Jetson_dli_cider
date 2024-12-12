@@ -1,5 +1,28 @@
 # jetson_dli_cider
+#include <cm1106_i2c.h>
 
+CM1106_I2C cm1106_i2c;
+
+void setup() {
+  cm1106_i2c.begin();
+  Serial.begin(9600);
+  delay(1000);
+}
+
+void loop() {
+  uint8_t ret = cm1106_i2c.measure_result();
+
+  if (ret == 0) {
+    Serial.print("CO2:");
+    Serial.println(cm1106_i2c.co2); // CO2 데이터를 시리얼로 전송
+  } else {
+    Serial.println("Error reading sensor data.");
+  }
+  delay(1000);
+}
+
+
+------------------------------------------
 https://discord.com/api/webhooks/1316656864821379113/sL8ukrsNilzQeluyonvxZSLNxT0POnQRdQHL0TtbaQklzV1faYpwHzC43UQK8AYKc9YN
 import serial
 import requests
@@ -62,6 +85,7 @@ finally:
 
 
 ------------------------------
+아두이노에서 그냥 co2데이터만 읽는 코드
 
 #include <cm1106_i2c.h>
 
