@@ -20,15 +20,15 @@ def measure_co2():
             time.sleep(2)  # 응답 대기 시간 증가
 
             # 센서 응답 읽기
-            response = ser.read(9)  # 응답 크기를 확인 후 조정 필요
+            response = ser.read(9).decode('utf-8')  # 응답 문자열로 디코딩
             print(f"Raw response: {response}")  # 디버깅용 응답 출력
-            print(f"Response length: {len(response)}")  # 응답 길이 확인
 
-            if len(response) == 9:  # 응답 길이가 예상한 값인 경우
-                co2 = response[2] * 256 + response[3]  # CO2 데이터 해석
-                return co2
+            # 'CO2:734'에서 숫자 부분 추출
+            if response.startswith("CO2:"):
+                co2_value = int(response.split(":")[1].strip())
+                return co2_value
             else:
-                print("Error reading sensor data: Invalid response length or empty response.")
+                print("Error reading sensor data: Unexpected response format.")
                 return None
 
     except serial.SerialException as e:
@@ -38,6 +38,7 @@ def measure_co2():
     except Exception as e:
         print(f"Error during measurement: {e}")
         return None
+
 
 # 예시: 함수 호출
 if __name__ == "__main__":
