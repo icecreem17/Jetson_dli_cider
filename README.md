@@ -1,4 +1,48 @@
 # jetson_dli_cider
+def gpt_analysis(co2_concentration):
+    """
+    Calls GPT to analyze CO2 data and provide a detailed explanation.
+    """
+    if isinstance(co2_concentration, int):
+        # GPT 프롬프트 생성
+        prompt = f"""
+        The current CO2 concentration is {co2_concentration} ppm.
+        Based on this value, analyze the air quality and determine if ventilation is necessary.
+        Provide a detailed explanation and actionable advice.
+        """
+
+        # GPT 모델 호출
+        response = openai.Completion.create(
+            model="text-davinci-003",
+            prompt=prompt,
+            max_tokens=150
+        )
+        return response["choices"][0]["text"].strip()
+    else:
+        return f"Error in measurement: {co2_concentration}"
+
+def chatbot_interface():
+    """
+    Gradio chatbot interface that integrates CO2 measurement and GPT-based analysis.
+    """
+    def process_input(_):
+        co2_concentration = measure_co2()  # CO2 농도 측정
+        gpt_response = gpt_analysis(co2_concentration)  # GPT 분석 호출
+        return gpt_response
+
+    with gr.Blocks() as demo:
+        gr.Markdown("# CO2 Ventilation Assistant (GPT-Based)")
+        chatbot = gr.Chatbot(label="AI Chatbot for CO2 Ventilation Advice")
+        user_textbox = gr.Textbox(label="Press Enter to Measure CO2 and Get Advice")
+        user_textbox.submit(process_input, None, chatbot)
+
+    demo.launch(share=True, debug=True)
+
+# 실행
+if __name__ == "__main__":
+    chatbot_interface()
+
+------
 import serial
 import time
 
