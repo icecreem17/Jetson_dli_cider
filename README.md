@@ -1,4 +1,75 @@
 # jetson_dli_cider
+import serial
+import time
+
+def measure_co2():
+    SERIAL_PORT = "/dev/ttyUSB0"  # 실제 연결된 포트로 변경
+    BAUD_RATE = 9600
+
+    try:
+        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=5) as ser:
+            ser.write(b'\x11\x01\x01\xED')  # CM1106 센서 명령어
+            time.sleep(5)  # 응답 대기 시간
+
+            # 응답 데이터 읽기
+            response = ser.read_all()  # 가능한 모든 데이터 읽기
+            print(f"Raw response (bytes): {response}")
+
+            try:
+                response = response.decode('ascii')  # 디코딩 시도
+                print(f"Decoded response: {response}")
+            except Exception as decode_error:
+                print(f"Decoding error: {decode_error}")
+                return "Error: Failed to decode response."
+
+            if response.startswith("CO2:"):
+                co2_value = response.split(":")[1].strip()
+                return co2_value
+            else:
+                print("Error: Unexpected response format.")
+                return "Error: Unexpected response format."
+
+    except serial.SerialException as e:
+        print(f"Serial connection error: {e}")
+        return "Error: Serial connection issue."
+
+    except Exception as e:
+        print(f"Error during measurement: {e}")
+        return f"Error: {str(e)}"
+
+
+
+
+
+
+
+
+
+------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------
 
 use_functions = [
     {
