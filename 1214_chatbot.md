@@ -297,3 +297,165 @@ with gr.Blocks() as demo:
 demo.launch(share=True, debug=True)
 
 ```
+## measure_co2 메소드
+```
+def measure_co2():
+    SERIAL_PORT = "/dev/ttyUSB0"  # 실제 연결된 포트
+    BAUD_RATE = 9600
+
+    try:
+        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=5) as ser:
+            ser.write(b'\x11\x01\x01\xED')  # CM1106 센서 명령어
+            time.sleep(5)  # 응답 대기 시간
+
+            # 응답 데이터 읽기
+            response = ser.read_all()
+            print(f"Raw response (bytes): {response}")
+
+            try:
+                response = response.decode('ascii').strip()  # 응답을 ASCII로 디코딩
+                print(f"Decoded response: {response}")
+            except Exception as decode_error:
+                print(f"Decoding error: {decode_error}")
+                return {"error": "Failed to decode response."}
+
+            # 데이터 형식 확인
+            if response.startswith("CO2:"):
+                co2_value = int(response.split(":")[1].strip())  # CO2 값을 정수로 변환
+                return {"co2_value": co2_value}
+            else:
+                return {"error": "Unexpected response format."}
+
+    except serial.SerialException as e:
+        print(f"Serial connection error: {e}")
+        return {"error": "Serial connection issue."}
+
+    except Exception as e:
+        print(f"Error during measurement: {e}")
+        return {"error": str(e)}
+```
+## gpt_analysis 메소드
+```
+def gpt_analysis(co2_concentration):
+    """
+    GPT를 사용하여 CO2 농도를 분석하고 권고 사항을 생성합니다.
+    """
+    if isinstance(co2_concentration, int):
+        messages = [
+            {"role": "system", "content": "You are an expert in indoor air quality analysis."},
+            {"role": "user", "content": f"The current CO2 concentration is {co2_concentration} ppm. "
+                                         f"Analyze the air quality and provide recommendations."},
+        ]
+        try:
+            client = OpenAI()
+            response = client.Completion.create(
+                model="text-davinci-003",
+                messages=messages,
+                max_tokens=300,
+                temperature=0.7
+            )
+            return {
+                "details": response["choices"][0]["text"].strip()
+            }
+        except Exception as e:
+            return {"error": str(e)}
+    else:
+        return {"error": f"Invalid CO2 value: {co2_concentration}"}
+```
+## ask_openai 메소드
+```
+def ask_openai(llm_model, messages, user_message, functions=''):
+    client = OpenAI()
+    proc_messages = messages
+
+    if user_message != '':
+        proc_messages.append({"role": "user", "content": user_message})
+
+    try:
+        if functions == '':
+            response = client.chat.completions.create(
+                model=llm_model,
+                messages=proc_messages,
+                temperature=1.0
+            )
+        else:
+            response = client.chat.completions.create(
+                model=llm_model,
+                messages=proc_messages,
+                tools=functions,
+                tool_choice="auto"
+            )
+
+        response_message = response.choices[0].message
+        tool_calls = response_message.tool_calls
+
+        if tool_calls:
+            available_functions = {
+                "measure_co2": measure_co2,
+                "gpt_analysis": gpt_analysis
+            }
+
+            messages.append(response_message)  # 대화 확장
+
+            for tool_call in tool_calls:
+                function_name = tool_call.function.name
+                function_to_call = available_functions[function_name]
+                function_args = json.loads(tool_call.function.arguments)
+
+                function_response = function_to_call(**function_args)
+
+                proc_messages.append(
+                    {
+                        "tool_call_id": tool_call.id,
+                        "role": "tool",
+                        "name": function_name,
+                        "content": function_response,
+                    }
+                )
+            second_response = client.chat.completions.create(
+                model=llm_model,
+                messages=proc_messages,
+            )
+            assistant_message = second_response.choices[0].message.content
+        else:
+            assistant_message = response_message.content
+
+        text = assistant_message.replace('\n', ' ').replace(' .', '.').strip()
+        proc_messages.append({"role": "assistant", "content": assistant_message})
+
+        return proc_messages, text
+
+    except Exception as e:
+        return proc_messages, str(e)
+```
+## Gradio 연동
+```
+def process_input(user_message):
+    if "이산화탄소 농도를 알려줘" in user_message:
+        result = co2_analysis_crew.run()
+        if isinstance(result, str) and "error" in result:
+            return f"Error: {result}"
+        else:
+            co2_value = result.get("co2_value")
+            analysis = result.get("details", "No analysis available.")
+            return f"현재 이산화탄소 농도는 {co2_value} ppm입니다.\n\n{analysis}"
+    else:
+        return "죄송합니다. 현재 이 질문에 대한 답변을 준비 중입니다."
+```
+## Gradio ui  구성
+```
+def process(user_message, chat_history):
+    proc_messages, ai_message = ask_openai("text-davinci-003", messages, user_message, functions=use_functions)
+    chat_history.append((user_message, ai_message))
+    return "", chat_history
+
+with gr.Blocks() as demo:
+    chatbot = gr.Chatbot(label="채팅창")
+    user_textbox = gr.Textbox(label="입력")
+    user_textbox.submit(process, [user_textbox, chatbot], [user_textbox, chatbot])
+
+demo.launch(share=True, debug=True)
+```
+
+
+
