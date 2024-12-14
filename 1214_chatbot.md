@@ -463,5 +463,168 @@ demo.launch(share=True, debug=True)
 
 ```
 
+---
 
+```
+import os
+from openai import OpenAI
+import json
+import Jetson.GPIO as GPIO
+import time
+import math
+import serial
+import gradio as gr
+
+# OpenAI API 설정
+os.environ['OPENAI_API_KEY'] = ''
+OpenAI.api_key = os.getenv("OPENAI_API_KEY")
+
+# **Agent 정의**
+class Agent:
+    def __init__(self, role, goal, function):
+        self.role = role
+        self.goal = goal
+        self.function = function
+
+    def execute(self, **kwargs):
+        try:
+            return self.function(**kwargs)
+        except Exception as e:
+            return {"error": f"Execution failed: {str(e)}"}
+
+# **Task 정의**
+class Task:
+    def __init__(self, description, agent):
+        self.description = description
+        self.agent = agent
+
+    def run(self, **kwargs):
+        print(f"Executing Task: {self.description}")
+        result = self.agent.execute(**kwargs)
+        if "error" in result:
+            print(f"Task failed: {self.description}")
+        return {"task": self.description, "result": result}
+
+# **Crew 정의**
+class Crew:
+    def __init__(self, tasks, continue_on_error=False):
+        self.tasks = tasks
+        self.continue_on_error = continue_on_error
+
+    def run(self):
+        context = {}
+        results = []
+        for task in self.tasks:
+            result = task.run(**context)
+            if "error" in result:
+                print(f"Error in task: {result['error']}")
+                if not self.continue_on_error:
+                    return {"error": result["error"]}
+            else:
+                context.update(result["result"])
+            results.append(result)
+        return {"results": results, "final_context": context}
+
+# CO2 센서 측정 함수
+def measure_co2():
+    SERIAL_PORT = "/dev/ttyUSB0"  # 실제 연결된 포트로 변경
+    BAUD_RATE = 9600
+
+    try:
+        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=5) as ser:
+            ser.write(b'\x11\x01\x01\xED')  # CM1106 센서 명령어
+            time.sleep(2)  # 응답 대기 시간
+
+            response = ser.read(9)  # 정확한 바이트 수에 맞춰 읽기
+            if len(response) < 9:
+                return {"co2_value": "Error: Insufficient data received."}
+
+            # 데이터 파싱 (예: CM1106의 프로토콜 기준)
+            high_byte, low_byte = response[2], response[3]
+            co2_value = (high_byte << 8) | low_byte  # CO2 값 계산
+            return {"co2_value": co2_value}
+
+    except serial.SerialException as e:
+        return {"co2_value": f"Error: {str(e)}"}
+
+# CO2 분석 함수
+def gpt_analysis(co2_concentration):
+    try:
+        co2_concentration = int(co2_concentration)  # 정수 변환
+    except ValueError:
+        return {"error": "Invalid CO2 value format. Expected an integer."}
+
+    messages = [
+        {"role": "system", "content": "You are an expert in indoor air quality analysis."},
+        {"role": "user", "content": f"The current CO2 concentration is {co2_concentration} ppm. "
+                                         "Provide analysis of air quality, health impacts, and recommendations."}
+    ]
+
+    try:
+        client = OpenAI()
+        response = client.Completion.create(
+            model="text-davinci-003",
+            messages=messages,
+            max_tokens=300,
+            temperature=0.7
+        )
+        if "choices" in response and response["choices"]:
+            details = response["choices"][0]["text"].strip()
+            return {"analysis": details}
+        else:
+            return {"error": "Invalid response format from GPT."}
+    except Exception as e:
+        return {"error": str(e)}
+
+# Agent 정의
+measure_co2_agent = Agent(
+    role="Sensor",
+    goal="현재 이산화탄소 농도를 측정합니다.",
+    function=measure_co2,
+)
+
+gpt_analysis_agent = Agent(
+    role="Analyzer",
+    goal="CO2 농도를 기반으로 GPT 모델을 사용해 실내 공기질을 분석합니다.",
+    function=lambda co2_value: gpt_analysis(co2_value),
+)
+
+# Task 정의
+co2_measure_task = Task(
+    description="CO2 농도를 측정합니다.",
+    agent=measure_co2_agent,
+)
+
+gpt_analysis_task = Task(
+    description="측정된 CO2 농도를 기반으로 분석 결과를 생성합니다.",
+    agent=gpt_analysis_agent,
+)
+
+# Crew 생성
+co2_analysis_crew = Crew(tasks=[co2_measure_task, gpt_analysis_task])
+
+# Gradio를 통한 인터페이스
+def process_input(user_message):
+    context = {}
+    if "이산화탄소 농도를 알려줘" in user_message:
+        result = co2_analysis_crew.run()
+        if isinstance(result, dict) and "error" in result:
+            return f"Error: {result['error']}"
+        else:
+            co2_value = result.get("final_context", {}).get("co2_value", "Unknown")
+            analysis = result.get("final_context", {}).get("analysis", "No analysis available.")
+            return f"현재 이산화탄소 농도는 {co2_value} ppm입니다.\n\n{analysis}"
+    else:
+        return "죄송합니다. 현재 이 질문에 대한 답변을 준비 중입니다."
+
+def chatbot_interface():
+    with gr.Blocks() as demo:
+        gr.Markdown("# CO2 Ventilation Assistant")
+        chatbot = gr.Chatbot(label="AI Chatbot for CO2 Analysis")
+        user_textbox = gr.Textbox(label="Enter your message", placeholder="예: 이산화탄소 농도를 알려줘")
+        user_textbox.submit(process_input, inputs=user_textbox, outputs=chatbot)
+    demo.launch(share=True, debug=True)
+
+chatbot_interface()
+```
 
